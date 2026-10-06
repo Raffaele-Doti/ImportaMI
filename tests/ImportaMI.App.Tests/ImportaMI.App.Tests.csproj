@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- xUnit v3, richiesto da Avalonia.Headless.XUnit 12: i progetti di test sono eseguibili. -->
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless.XUnit" Version="12.1.3" />
+    <PackageReference Include="Avalonia.Skia" Version="12.1.3" />
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <!-- 3.2.2 è la versione usata da Avalonia.Headless.XUnit 12.1.3; la 4.x attiva Microsoft.Testing.Platform,
+         che con l'SDK .NET 10 rompe "dotnet test" in modalità VSTest. -->
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ImportaMI.App\ImportaMI.App.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Stessi strumenti per creare schede finte e JPEG con EXIF dei test di Core. -->
+    <Compile Include="..\ImportaMI.Core.Tests\TestFiles.cs" Link="TestFiles.cs" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,140 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ImportaMI.App.App"
+             xmlns:local="using:ImportaMI.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Resources>
+        <!-- Palette del prototipo: grafite bluastro con accento ambra "pellicola". -->
+        <SolidColorBrush x:Key="AppBackground" Color="#111317" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#171A20" />
+        <SolidColorBrush x:Key="RaisedBrush" Color="#1F232B" />
+        <SolidColorBrush x:Key="LineBrush" Color="#2A2F38" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#8D95A4" />
+        <SolidColorBrush x:Key="FaintBrush" Color="#5F6776" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#F0A944" />
+        <SolidColorBrush x:Key="AccentSoftBrush" Color="#29F0A944" />
+        <SolidColorBrush x:Key="OkBrush" Color="#5FC48D" />
+        <SolidColorBrush x:Key="WarnBrush" Color="#E8C450" />
+        <SolidColorBrush x:Key="ErrorBrush" Color="#EF6F6C" />
+        <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace</FontFamily>
+
+        <!-- Testo scuro sui pulsanti ambra: il bianco del tema avrebbe poco contrasto. -->
+        <SolidColorBrush x:Key="AccentButtonForeground" Color="#1D1406" />
+        <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#1D1406" />
+        <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#1D1406" />
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark" Accent="#F0A944" RegionColor="#111317" ErrorText="#EF6F6C" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
+
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="16" />
+        </Style>
+        <Style Selector="TextBlock.title">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+        </Style>
+        <Style Selector="TextBlock.faint">
+            <Setter Property="Foreground" Value="{StaticResource FaintBrush}" />
+        </Style>
+        <Style Selector="TextBlock.mono">
+            <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="LetterSpacing" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource FaintBrush}" />
+        </Style>
+        <Style Selector="Border.chip">
+            <Setter Property="Background" Value="{StaticResource RaisedBrush}" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,3" />
+        </Style>
+        <Style Selector="Border.badge">
+            <Setter Property="Background" Value="#99000000" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Padding" Value="4,1" />
+        </Style>
+        <Style Selector="Button.danger">
+            <Setter Property="Background" Value="{StaticResource ErrorBrush}" />
+            <Setter Property="Foreground" Value="#1B0707" />
+        </Style>
+        <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F48582" />
+            <Setter Property="Foreground" Value="#1B0707" />
+        </Style>
+        <Style Selector="Button.danger:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#4DEF6F6C" />
+        </Style>
+        <Style Selector="Border.tile">
+            <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Margin" Value="0,0,10,10" />
+        </Style>
+        <Style Selector="TextBlock.tilevalue">
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,6,0,2" />
+        </Style>
+        <Style Selector="Border.notice">
+            <Setter Property="BorderBrush" Value="{StaticResource WarnBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Background" Value="#14E8C450" />
+        </Style>
+        <Style Selector="Border.notice.error">
+            <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}" />
+            <Setter Property="Background" Value="#14EF6F6C" />
+        </Style>
+        <Style Selector="Border.status">
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="Background" Value="{StaticResource RaisedBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource MutedBrush}" />
+        </Style>
+        <Style Selector="Border.status.running">
+            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource AccentBrush}" />
+        </Style>
+        <Style Selector="Border.status.ok">
+            <Setter Property="Background" Value="#245FC48D" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource OkBrush}" />
+        </Style>
+        <Style Selector="Border.status.error">
+            <Setter Property="Background" Value="#26EF6F6C" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource ErrorBrush}" />
+        </Style>
+        <Style Selector="Button.subtle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+        </Style>
+        <Style Selector="Border.actionbar">
+            <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="0,1,0,0" />
+            <Setter Property="Padding" Value="24,12" />
+        </Style>
+    </Application.Styles>
+</Application>

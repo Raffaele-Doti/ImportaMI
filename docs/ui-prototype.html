@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;font-size:14px}[hidden]{display:none!important}</style>
+<title>ImportaMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: pagina di presentazione → una finestra applicativa (stepper laterale + schermata + barra azioni) → note UX sotto */
+:root{
+  --page-bg:#e4e6ea; --page-fg:#1a1d23; --page-muted:#5a6170; --page-line:#cdd1d9;
+  --app-bg:#111317; --app-panel:#171a20; --app-raised:#1f232b; --app-hover:#272c35; --app-line:#2a2f38;
+  --app-fg:#e8eaef; --app-muted:#8d95a4; --app-faint:#5f6776;
+  --accent:#f0a944; --accent-ink:#1d1406; --accent-soft:rgba(240,169,68,.16);
+  --ok:#5fc48d; --warn:#e8c450; --err:#ef6f6c;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-ui:"Instrument Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --page-bg:#08090b; --page-fg:#e3e6ec; --page-muted:#8a92a1; --page-line:#22262d; color-scheme:dark }
+}
+:root[data-theme="dark"]{ --page-bg:#08090b; --page-fg:#e3e6ec; --page-muted:#8a92a1; --page-line:#22262d; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--page-bg);color:var(--page-fg);font-family:var(--f-ui);padding-block:28px 56px;padding-inline:16px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.page-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.eyebrow{font:500 11px/1 var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--page-muted)}
+h1{font:700 clamp(28px,4.2vw,40px)/1.05 var(--f-display);margin:8px 0 6px;letter-spacing:-.015em;text-wrap:balance}
+.lede{color:var(--page-muted);max-width:64ch;margin:0;font-size:14.5px;line-height:1.55}
+.tag{font:500 11.5px var(--f-mono);color:var(--page-muted);border:1px solid var(--page-line);border-radius:999px;padding:6px 11px;white-space:nowrap}
+
+/* ---------- finestra ---------- */
+.win{position:relative;background:var(--app-bg);color:var(--app-fg);border-radius:12px;border:1px solid var(--app-line);box-shadow:0 40px 90px -40px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.18);overflow:hidden;color-scheme:dark;font-size:13.5px}
+.titlebar{height:38px;display:flex;align-items:center;gap:10px;padding-left:14px;background:var(--app-panel);border-bottom:1px solid var(--app-line);font-size:12.5px;color:var(--app-muted);user-select:none}
+.titlebar b{color:var(--app-fg);font-weight:600}
+.logo{width:16px;height:16px;border-radius:4px;background:conic-gradient(from 210deg,var(--accent),#c76a2a,var(--accent));position:relative}
+.logo::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--app-panel)}
+.tb-src{font-family:var(--f-mono);font-size:11.5px;color:var(--app-faint)}
+.wctl{margin-left:auto;display:flex;color:var(--app-faint)}
+.wctl span{width:44px;height:38px;display:grid;place-items:center;font-size:12px}
+.app{display:grid;grid-template-columns:224px minmax(0,1fr);height:780px}
+
+nav.steps{background:var(--app-panel);border-right:1px solid var(--app-line);padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+.step{display:flex;gap:12px;align-items:center;padding:10px;border-radius:8px;border:0;background:none;color:var(--app-muted);font:500 13.5px var(--f-ui);text-align:left;cursor:pointer;width:100%}
+.step:hover{background:var(--app-raised);color:var(--app-fg)}
+.step .n{flex:0 0 24px;height:24px;border-radius:50%;border:1.5px solid var(--app-faint);display:grid;place-items:center;font:500 11px var(--f-mono)}
+.step small{display:block;font-size:11.5px;color:var(--app-faint);font-weight:400;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.step.done .n{border-color:var(--ok);color:var(--ok)}
+.step.on{background:var(--app-raised);color:var(--app-fg)}
+.step.on .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.src-card{margin-top:auto;border-top:1px solid var(--app-line);padding:14px 6px 2px;display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--app-muted)}
+.src-card .lbl{font:500 10.5px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--app-faint)}
+.src-card b{color:var(--app-fg);font-weight:600;font-size:13px}
+.meter{height:5px;border-radius:3px;background:var(--app-raised);overflow:hidden;display:flex}
+.meter i{display:block;height:100%;background:var(--app-muted)}
+.meter i.acc{background:var(--accent)}
+.live{display:inline-flex;align-items:center;gap:6px;color:var(--ok)}
+.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(95,196,141,.18)}
+
+main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.screen{display:flex;flex-direction:column;min-height:0;flex:1}
+.scr-head{padding:18px 24px 14px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--app-line)}
+.scr-head h2{font:600 21px/1.2 var(--f-display);margin:0;letter-spacing:-.01em}
+.scr-head p{margin:4px 0 0;color:var(--app-muted);font-size:13px}
+.scr-body{flex:1;min-height:0;overflow:auto;padding:20px 24px}
+.actionbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 24px;border-top:1px solid var(--app-line);background:var(--app-panel)}
+.actionbar .sum{margin-right:auto;font-size:13px;color:var(--app-muted);min-width:0}
+.sum b{color:var(--app-fg);font-weight:600;font-variant-numeric:tabular-nums}
+
+.btn{font:600 13px var(--f-ui);padding:9px 16px;border-radius:7px;border:1px solid var(--app-line);background:var(--app-raised);color:var(--app-fg);cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--app-hover)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{background:#f6b65a}
+.btn.ghost{background:none;border-color:transparent;color:var(--app-muted)}
+.btn.ghost:hover{color:var(--app-fg);background:var(--app-raised)}
+.btn.sm{padding:6px 11px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:16px;height:16px;margin:0;flex:0 0 auto;cursor:pointer}
+
+/* ---------- 1 sorgente ---------- */
+.src-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px}
+.sec-title{font:500 10.5px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--app-faint);margin:0 0 10px}
+.devices{display:flex;flex-direction:column;gap:8px}
+.dev{display:grid;grid-template-columns:auto 40px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px;border:1px solid var(--app-line);border-radius:10px;background:var(--app-panel);cursor:pointer}
+.dev:hover{border-color:#3a404b}
+.dev:has(input:checked){border-color:var(--accent);background:linear-gradient(0deg,var(--accent-soft),var(--accent-soft)),var(--app-panel)}
+.dev svg{width:40px;height:40px;padding:8px;border-radius:9px;background:var(--app-raised);stroke:var(--app-fg);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dev .t{font-weight:600;font-size:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dev .s{color:var(--app-muted);font-size:12px;margin-top:3px}
+.dev .meter{margin-top:8px;max-width:260px}
+.pill{font:500 10.5px var(--f-mono);letter-spacing:.04em;padding:3px 7px;border-radius:999px;background:var(--app-raised);color:var(--app-muted);white-space:nowrap}
+.pill.new{background:var(--accent-soft);color:var(--accent)}
+.pill.ok{background:rgba(95,196,141,.14);color:var(--ok)}
+.pill.warn{background:rgba(232,196,80,.14);color:var(--warn)}
+.pill.err{background:rgba(239,111,108,.15);color:var(--err)}
+.dev .size{font:500 12px var(--f-mono);color:var(--app-muted);text-align:right;white-space:nowrap}
+.opts{display:flex;flex-direction:column;gap:20px}
+.optgroup{display:flex;flex-direction:column;gap:2px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer;line-height:1.4}
+.opt span small{display:block;color:var(--app-muted);font-size:12px}
+.opt .ext{font:12px var(--f-mono);color:var(--app-faint)}
+.opt.disabled{opacity:.45;cursor:not-allowed}
+.scan{margin-top:20px;border:1px solid var(--app-line);border-radius:10px;padding:16px;background:var(--app-panel);display:flex;flex-direction:column;gap:10px}
+.bar{height:6px;border-radius:3px;background:var(--app-raised);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:3px}
+.scan .row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--app-muted)}
+
+/* ---------- 2 sessioni ---------- */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px}
+.gapctl{display:flex;align-items:center;gap:12px;background:var(--app-panel);border:1px solid var(--app-line);border-radius:8px;padding:7px 12px}
+.gapctl label{font-size:12.5px;color:var(--app-muted);white-space:nowrap}
+.gapctl output{font:600 12.5px var(--f-mono);color:var(--accent);min-width:72px;font-variant-numeric:tabular-nums}
+input[type=range]{accent-color:var(--accent);width:150px}
+.sess-layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;flex:1;min-height:0}
+.sess-list{overflow:auto;padding:16px 20px 24px 24px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.listhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--app-muted)}
+.listhead .acts{display:flex;gap:4px}
+.sess{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;padding:14px 16px 14px 14px;border:1px solid var(--app-line);border-radius:10px;background:var(--app-panel);cursor:pointer;transition:border-color .15s,opacity .15s}
+.sess:hover{border-color:#3a404b}
+.sess.focus{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.sess.off{opacity:.5}
+.sess.off .name{text-decoration:line-through;text-decoration-color:var(--app-faint)}
+.sess>input{margin-top:3px;width:18px;height:18px}
+.sess-main{display:flex;flex-direction:column;gap:8px;min-width:0}
+.sess-top{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--app-muted);align-items:baseline}
+.sess-top .day{color:var(--app-fg);font-weight:600;text-transform:capitalize}
+.sess-top .mono{font-size:12px;font-variant-numeric:tabular-nums}
+.name{width:100%;font:600 15px var(--f-ui);color:var(--app-fg);background:var(--app-bg);border:1px solid var(--app-line);border-radius:6px;padding:8px 10px}
+.name:hover{border-color:#3a404b}
+.name:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.name::placeholder{color:var(--app-faint);font-weight:400}
+.pathrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.path{font:11.5px/1.4 var(--f-mono);color:var(--app-faint);overflow-wrap:anywhere;min-width:0}
+.path em{font-style:normal;color:var(--app-muted)}
+.strip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
+.ph{aspect-ratio:3/2;border-radius:3px;position:relative;overflow:hidden;max-width:100%;background:var(--app-raised)}
+.ph .play{position:absolute;inset:0;margin:auto;width:0;height:0;border-left:9px solid rgba(255,255,255,.9);border-top:6px solid transparent;border-bottom:6px solid transparent;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.ph .cap{position:absolute;left:4px;bottom:3px;font:500 10px var(--f-mono);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);font-variant-numeric:tabular-nums}
+.ph .bdg{position:absolute;right:4px;top:4px;font:600 8.5px var(--f-mono);letter-spacing:.04em;color:#fff;background:rgba(0,0,0,.55);padding:1px 4px;border-radius:3px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{font:500 11.5px var(--f-mono);color:var(--app-muted);background:var(--app-raised);padding:3px 8px;border-radius:5px;font-variant-numeric:tabular-nums}
+
+.preview{border-left:1px solid var(--app-line);background:var(--app-panel);overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.preview h3{font:600 17px/1.25 var(--f-display);margin:0;overflow-wrap:anywhere}
+.preview .sub{color:var(--app-muted);font-size:12.5px;margin-top:3px;text-transform:capitalize}
+.exif{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:12px;margin:0}
+.exif dt{color:var(--app-faint);font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding-top:1px}
+.exif dd{margin:0;color:var(--app-fg);overflow-wrap:anywhere}
+.timeline{position:relative;height:28px;border-radius:5px;background:var(--app-raised);overflow:hidden}
+.timeline i{position:absolute;top:6px;bottom:6px;width:1.5px;background:var(--accent);opacity:.75}
+.timeline + .tl-lbl{display:flex;justify-content:space-between;font:11px var(--f-mono);color:var(--app-faint);margin-top:-8px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:5px}
+.pgrid .more{display:grid;place-items:center;font:500 12px var(--f-mono);color:var(--app-muted);border:1px dashed var(--app-line);background:none}
+
+/* ---------- 3 destinazione ---------- */
+.dest-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}
+.col{display:flex;flex-direction:column;gap:22px;min-width:0}
+.field label.l{display:block;font-size:12.5px;color:var(--app-muted);margin-bottom:6px}
+.inrow{display:flex;gap:8px}
+.txt{flex:1;min-width:0;font:13px var(--f-mono);color:var(--app-fg);background:var(--app-bg);border:1px solid var(--app-line);border-radius:6px;padding:9px 10px}
+.txt:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+legend{padding:0;margin-bottom:8px}
+.choice{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--app-line);border-radius:8px;cursor:pointer;background:var(--app-panel)}
+.choice:has(input:checked){border-color:var(--accent);background:linear-gradient(0deg,var(--accent-soft),var(--accent-soft)),var(--app-panel)}
+.choice b{font-weight:600}
+.choice code{display:block;font:11.5px var(--f-mono);color:var(--app-muted);margin-top:3px;overflow-wrap:anywhere}
+.card{border:1px solid var(--app-line);border-radius:10px;background:var(--app-panel);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h3{font:600 14px var(--f-ui);margin:0;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.tree{margin:0;font:12px/1.75 var(--f-mono);color:var(--app-fg);overflow-x:auto;white-space:pre}
+.tree .g{color:var(--app-faint)}
+.tree .c{color:var(--app-muted)}
+.tree .x{color:var(--app-muted)}
+.space .meter{height:10px;border-radius:5px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--app-muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.note{font-size:12px;color:var(--app-muted);line-height:1.45}
+.note.warn{color:var(--warn)}
+
+/* ---------- 4 copia ---------- */
+.big{display:flex;flex-direction:column;gap:12px;padding-bottom:22px;border-bottom:1px solid var(--app-line);margin-bottom:18px}
+.bigtop{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.pct{font:700 54px/1 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stats{font-size:12.5px;color:var(--app-muted);font-variant-numeric:tabular-nums}
+.bigbar{height:10px;border-radius:5px;background:var(--app-raised);overflow:hidden}
+.bigbar i{display:block;height:100%;width:0;background:var(--accent);border-radius:5px}
+.cur{font-size:12px;color:var(--app-faint);overflow-wrap:anywhere}
+.cur b{color:var(--app-muted);font-weight:500}
+.rows{display:flex;flex-direction:column;gap:2px}
+.crow{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 90px 132px;gap:16px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--app-line)}
+.crow .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .nm small{display:block;font:11.5px var(--f-mono);color:var(--app-faint);font-weight:400;overflow:hidden;text-overflow:ellipsis}
+.crow .bar{height:5px}
+.crow .num{font:12px var(--f-mono);color:var(--app-muted);text-align:right;font-variant-numeric:tabular-nums}
+.crow .pill{justify-self:end}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:20px}
+.tile{border:1px solid var(--app-line);border-radius:10px;padding:14px;background:var(--app-panel)}
+.tile .k{font:500 10.5px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--app-faint)}
+.tile .v{font:700 28px/1.1 var(--f-display);margin-top:8px;font-variant-numeric:tabular-nums}
+.tile .d{font-size:12px;color:var(--app-muted);margin-top:4px}
+.tile.ok .v{color:var(--ok)} .tile.err .v{color:var(--err)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--app-line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:620px}
+th{font:500 10.5px var(--f-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--app-faint);text-align:left;padding:10px 12px;background:var(--app-panel);border-bottom:1px solid var(--app-line)}
+td{padding:10px 12px;border-bottom:1px solid var(--app-line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td .p{font:11.5px var(--f-mono);color:var(--app-faint);display:block;margin-top:2px}
+.errbox{margin-top:16px;border:1px solid rgba(239,111,108,.35);background:rgba(239,111,108,.07);border-radius:10px;padding:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.errbox div{flex:1;min-width:220px;font-size:12.5px;line-height:1.5;color:var(--app-muted)}
+.errbox b{color:var(--app-fg)}
+.okhead{display:flex;align-items:center;gap:10px}
+.okhead::before{content:"";width:22px;height:22px;border-radius:50%;background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111317' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/14px no-repeat;flex:0 0 auto}
+
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.seg .choice{padding:10px}
+@media (max-width:520px){.seg{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- 5 pulizia ---------- */
+.btn.danger{background:var(--err);border-color:var(--err);color:#1b0707}
+.btn.danger:hover{background:#f48582}
+.choice.disabled{opacity:.5;cursor:not-allowed}
+.choice small{display:block;color:var(--app-muted);font-size:12px;margin-top:3px;line-height:1.45}
+.klist{display:flex;flex-direction:column;border:1px solid var(--app-line);border-radius:10px;overflow:hidden}
+.krow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--app-line);background:var(--app-panel);cursor:pointer}
+.krow:last-child{border-bottom:0}
+.krow b{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.krow small{display:block;font:11.5px var(--f-mono);color:var(--app-faint);margin-top:2px}
+.krow .num{font:12px var(--f-mono);color:var(--app-muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.krow.dim{opacity:.5}
+.mrow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;font-size:12.5px;color:var(--app-muted)}
+.mrow .meter{height:10px;border-radius:5px}
+.mrow .num{font:12px var(--f-mono);color:var(--app-fg);white-space:nowrap;font-variant-numeric:tabular-nums}
+.meter i.free{background:var(--ok)}
+.keep{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.keep li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;font-size:12.5px;color:var(--app-muted);line-height:1.45}
+.keep li b{color:var(--app-fg);font-weight:600}
+.keep .num{font:12px var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums}
+.actionbar .ack{display:flex;gap:10px;align-items:center;color:var(--app-fg);cursor:pointer}
+.tip{border:1px solid var(--app-line);border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.5;color:var(--app-muted);background:var(--app-panel)}
+.tip b{color:var(--app-fg);font-weight:600}
+.okhead.neutral::before{background:var(--app-muted) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111317' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E") center/14px no-repeat}
+
+.toast{position:absolute;left:50%;bottom:76px;transform:translate(-50%,10px);background:var(--app-fg);color:var(--app-bg);font-weight:600;font-size:13px;padding:10px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- note UX ---------- */
+.notes{display:grid;grid-template-columns:220px minmax(0,1fr);gap:12px 32px;padding-top:4px}
+.notes h2{font:600 17px/1.25 var(--f-display);margin:0}
+.notes h2 small{display:block;font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--page-muted);margin-bottom:6px}
+.notes ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 28px}
+.notes li{font-size:13.5px;line-height:1.55;color:var(--page-fg);padding-left:16px;position:relative;max-width:62ch}
+.notes li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;border-radius:1px;background:var(--accent)}
+.notes li b{font-weight:600}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .app{height:auto}
+  .sess-layout{grid-template-columns:minmax(0,1fr)}
+  .preview{border-left:0;border-top:1px solid var(--app-line)}
+  .sess-list,.preview,.scr-body{overflow:visible}
+}
+@media (max-width:860px){
+  .src-grid,.dest-grid{grid-template-columns:minmax(0,1fr)}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .notes{grid-template-columns:minmax(0,1fr)}
+  .notes ul{grid-template-columns:minmax(0,1fr)}
+  .crow{grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}
+  .crow .bar{grid-column:1/-1;order:3}
+  .crow .num{display:none}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  nav.steps{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--app-line);padding:8px}
+  .step{width:auto;flex:0 0 auto;padding:8px 10px}
+  .step small,.src-card,.titlebar .tb-src{display:none}
+  .scr-head,.scr-body,.actionbar{padding-inline:16px}
+  .sess-list{padding-inline:16px}
+  .strip{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .strip .ph:nth-child(n+6){display:none}
+  .dev{grid-template-columns:auto 40px minmax(0,1fr)}
+  .dev .size{grid-column:3;text-align:left}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+  <header class="page-head">
+    <div>
+      <div class="eyebrow">Fase 1 · Prototipo UI/UX interattivo</div>
+      <h1>ImportaMI</h1>
+      <p class="lede">Importazione da scheda SD o disco esterno con raggruppamento automatico in sessioni di scatto, basato sull'orario EXIF. Il prototipo è cliccabile: cambia la soglia, rinomina le sessioni e avvia una copia simulata.</p>
+    </div>
+    <span class="tag">Dati di esempio · Canon EOS R6 II</span>
+  </header>
+
+  <div class="win" id="win">
+    <div class="titlebar"><span class="logo" aria-hidden="true"></span><b>ImportaMI</b><span class="tb-src" id="tb-src">EOS_DIGITAL (E:) · 64 GB</span><span class="wctl" aria-hidden="true"><span>–</span><span>▢</span><span>✕</span></span></div>
+    <div class="app">
+      <nav class="steps" aria-label="Passaggi">
+        <button class="step" data-go="1"><span class="n">1</span><span>Sorgente<small id="st1">EOS_DIGITAL (E:)</small></span></button>
+        <button class="step" data-go="2"><span class="n">2</span><span>Sessioni<small id="st2">–</small></span></button>
+        <button class="step" data-go="3"><span class="n">3</span><span>Destinazione<small id="st3">D:\Foto</small></span></button>
+        <button class="step" data-go="4"><span class="n">4</span><span>Copia e report<small id="st4">In attesa</small></span></button>
+        <button class="step" data-go="5"><span class="n">5</span><span>Pulizia scheda<small id="st5">Dopo la copia</small></span></button>
+        <div class="src-card">
+          <span class="lbl">Sorgente</span>
+          <b>EOS_DIGITAL</b>
+          <span class="live" id="card-live">Collegata · E:\</span>
+          <div class="meter"><i id="card-meter"></i></div>
+          <span class="mono" id="card-used"></span>
+        </div>
+      </nav>
+
+      <main>
+        <!-- 1 · SORGENTE -->
+        <section class="screen" data-step="1" hidden>
+          <div class="scr-head"><div><h2>Da dove importare?</h2><p>Le memorie esterne compaiono qui appena le colleghi.</p></div></div>
+          <div class="scr-body">
+            <div class="src-grid">
+              <div>
+                <p class="sec-title">Dispositivi rilevati</p>
+                <div class="devices">
+                  <label class="dev"><input type="radio" name="dev" id="dev-sd" checked>
+                    <svg viewBox="0 0 24 24"><path d="M8 2.5h7.5l4 4V19a2.5 2.5 0 0 1-2.5 2.5H8A2.5 2.5 0 0 1 5.5 19V5A2.5 2.5 0 0 1 8 2.5z"/><path d="M9.5 6.5v3M12.5 6.5v3M15.5 7.5v2"/></svg>
+                    <div><div class="t">EOS_DIGITAL <span class="pill new">Appena collegata</span></div><div class="s">Scheda SD · SanDisk Extreme Pro · E:\</div><div class="meter"><i id="dev-sd-meter"></i></div></div>
+                    <div class="size" id="dev-sd-size"></div></label>
+                  <label class="dev"><input type="radio" name="dev" id="dev-cf">
+                    <svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 7.5h8M8 17h3"/></svg>
+                    <div><div class="t">CFEXPRESS_B</div><div class="s">CFexpress tipo B · lettore USB · G:\</div><div class="meter"><i style="width:22%"></i></div></div>
+                    <div class="size">28,1 / 128 GB</div></label>
+                  <label class="dev"><input type="radio" name="dev" id="dev-ssd">
+                    <svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="11" rx="2.5"/><path d="M6.5 13.5h.01M10 13.5h7"/></svg>
+                    <div><div class="t">T7 Shield</div><div class="s">Disco esterno USB-C · F:\</div><div class="meter"><i style="width:47%"></i></div></div>
+                    <div class="size">0,94 / 2 TB</div></label>
+                  <label class="dev"><input type="radio" name="dev" id="dev-dir">
+                    <svg viewBox="0 0 24 24"><path d="M3 7.5A2 2 0 0 1 5 5.5h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                    <div><div class="t">Scegli una cartella…</div><div class="s">Qualsiasi percorso locale o di rete</div></div>
+                    <div class="size"></div></label>
+                </div>
+              </div>
+              <div class="opts">
+                <div class="optgroup">
+                  <p class="sec-title">File da cercare sulla scheda</p>
+                  <label class="opt"><input type="checkbox" id="ft-raw" checked><span>Foto RAW <span class="ext">CR3 · NEF · ARW · RAF · DNG</span></span></label>
+                  <label class="opt"><input type="checkbox" id="ft-jpg" checked><span>JPEG e HEIC <span class="ext">JPG · HEIC · HIF</span></span></label>
+                  <label class="opt"><input type="checkbox" id="ft-vid" checked><span>Video <span class="ext">MP4 · MOV</span></span></label>
+                </div>
+                <div class="optgroup">
+                  <p class="sec-title">Scansione</p>
+                  <label class="opt"><input type="checkbox" id="sc-new" checked><span>Mostra solo i file non ancora importati<small>Confronto con l'indice delle importazioni precedenti</small></span></label>
+                  <label class="opt"><input type="checkbox" id="sc-dcim" checked><span>Cerca solo nella cartella DCIM<small>Più veloce; disattiva per dischi organizzati a mano</small></span></label>
+                </div>
+              </div>
+            </div>
+            <div class="scan" id="scan" hidden>
+              <div class="row"><span id="scan-a">Lettura EXIF…</span><span class="mono" id="scan-b">0 / 0</span></div>
+              <div class="bar"><i id="scan-bar"></i></div>
+              <div class="row"><span class="mono" id="scan-c">DCIM\100EOSR6</span><span id="scan-d"></span></div>
+            </div>
+          </div>
+          <div class="actionbar"><span class="sum" id="sum1"></span><button class="btn primary" id="btn-scan">Scansiona scheda</button></div>
+        </section>
+
+        <!-- 2 · SESSIONI -->
+        <section class="screen" data-step="2" hidden>
+          <div class="scr-head">
+            <div><h2>Sessioni di scatto</h2><p id="s2-sub"></p></div>
+            <div class="toolbar">
+              <div class="gapctl"><label for="gap">Nuova sessione dopo una pausa di</label><input type="range" id="gap" min="15" max="240" step="15" value="60"><output id="gap-out" for="gap">1 h</output></div>
+            </div>
+          </div>
+          <div class="sess-layout">
+            <div class="sess-list" id="list-wrap">
+              <div class="listhead"><span id="list-count"></span><span class="acts"><button class="btn ghost sm" id="sel-all">Seleziona tutte</button><button class="btn ghost sm" id="sel-none">Nessuna</button></span></div>
+              <div id="list" style="display:flex;flex-direction:column;gap:10px"></div>
+            </div>
+            <aside class="preview" id="preview" aria-live="polite"></aside>
+          </div>
+          <div class="actionbar"><span class="sum" id="sum2"></span><button class="btn ghost" data-nav="1">Indietro</button><button class="btn primary" id="to3">Avanti: destinazione</button></div>
+        </section>
+
+        <!-- 3 · DESTINAZIONE -->
+        <section class="screen" data-step="3" hidden>
+          <div class="scr-head"><div><h2>Dove salvare le sessioni?</h2><p>Controlla la struttura a destra: è esattamente ciò che verrà creato sul disco.</p></div></div>
+          <div class="scr-body">
+            <div class="dest-grid">
+              <div class="col">
+                <div class="field"><label class="l" for="dest">Cartella di destinazione</label>
+                  <div class="inrow"><input class="txt" id="dest" value="D:\Foto" spellcheck="false"><button class="btn" id="browse">Sfoglia…</button></div></div>
+                <fieldset><legend class="sec-title">Formati da importare</legend>
+                  <div class="seg">
+                    <label class="choice"><input type="radio" name="fmt" id="fmt-both" value="both" checked><span><b>RAW + JPEG</b><small>Tutti i file di ogni scatto</small></span></label>
+                    <label class="choice"><input type="radio" name="fmt" id="fmt-raw" value="raw"><span><b>Solo RAW</b><small>I JPEG restano sulla scheda</small></span></label>
+                    <label class="choice"><input type="radio" name="fmt" id="fmt-jpg" value="jpg"><span><b>Solo JPEG</b><small>Più leggero da archiviare</small></span></label>
+                  </div>
+                  <p class="note" id="fmt-note"></p>
+                  <label class="opt"><input type="checkbox" id="o-vid" checked><span>Includi i video <span class="ext">MP4 · MOV</span></span></label>
+                </fieldset>
+                <fieldset><legend class="sec-title">Struttura cartelle</legend>
+                  <label class="choice"><input type="radio" name="tpl" id="tpl-flat" value="flat"><span><b>Data e nome</b><code>2026-09-27 Alba al lago di Como</code></span></label>
+                  <label class="choice"><input type="radio" name="tpl" id="tpl-year" value="year" checked><span><b>Anno › data e nome</b><code>2026\2026-09-27 Alba al lago di Como</code></span></label>
+                  <label class="choice"><input type="radio" name="tpl" id="tpl-ym" value="ym"><span><b>Anno › mese › data e nome</b><code>2026\09\2026-09-27 Alba al lago di Como</code></span></label>
+                </fieldset>
+                <fieldset><legend class="sec-title">Dentro ogni sessione</legend>
+                  <label class="opt"><input type="radio" name="sub" id="sub-none" value="none"><span>Tutto nella cartella della sessione</span></label>
+                  <label class="opt"><input type="radio" name="sub" id="sub-pv" value="pv" checked><span>Foto e video in cartelle separate<small>…\2026-10-02 Concerto\Foto · …\Video</small></span></label>
+                  <label class="opt"><input type="radio" name="sub" id="sub-format" value="format"><span>RAW, JPEG e video in cartelle separate<small>…\RAW · …\JPG · …\Video</small></span></label>
+                </fieldset>
+                <fieldset><legend class="sec-title">Se un file esiste già</legend>
+                  <label class="opt"><input type="radio" name="dup" id="dup-skip" value="skip" checked><span>Salta se identico<small>Confronto di dimensione e hash; i file diversi con lo stesso nome vengono rinominati</small></span></label>
+                  <label class="opt"><input type="radio" name="dup" id="dup-ren" value="rename"><span>Rinomina sempre<small>IMG_4012.CR3 → IMG_4012 (1).CR3</small></span></label>
+                  <label class="opt"><input type="radio" name="dup" id="dup-over" value="over"><span>Sovrascrivi</span></label>
+                </fieldset>
+                <fieldset><legend class="sec-title">Opzioni</legend>
+                  <label class="opt"><input type="checkbox" id="o-verify" checked><span>Verifica ogni file dopo la copia<small>Checksum xxHash64 tra scheda e destinazione</small></span></label>
+                  <label class="opt"><input type="checkbox" id="o-clean" checked><span>Al termine proponi la pulizia della scheda<small>Elimina solo i file copiati e verificati, e solo dopo la tua conferma</small></span></label>
+                  <label class="opt"><input type="checkbox" id="o-eject" checked><span>Espelli la scheda alla fine</span></label>
+                </fieldset>
+              </div>
+              <div class="col">
+                <div class="card"><h3>Anteprima su disco <span class="pill" id="tree-pill"></span></h3><pre class="tree" id="tree"></pre></div>
+                <div class="card space"><h3>Spazio su Archivio (D:) <span class="pill ok" id="space-pill">Sufficiente</span></h3>
+                  <div class="meter"><i style="width:60.5%"></i><i class="acc" id="space-imp"></i></div>
+                  <div class="legend"><span><i style="background:var(--app-muted)"></i>Occupato 1,21 TB</span><span><i style="background:var(--accent)"></i><span id="space-req"></span></span><span><i style="background:var(--app-raised);outline:1px solid var(--app-line)"></i><span id="space-free"></span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="actionbar"><span class="sum" id="sum3"></span><button class="btn ghost" data-nav="2">Indietro</button><button class="btn primary" id="to4">Avvia copia</button></div>
+        </section>
+
+        <!-- 4 · COPIA E REPORT -->
+        <section class="screen" data-step="4" hidden>
+          <div class="scr-head"><div><h2 id="c-title">Copia in corso</h2><p id="c-sub"></p></div></div>
+          <div class="scr-body">
+            <div id="c-run">
+              <div class="big">
+                <div class="bigtop"><span class="pct" id="c-pct">0%</span><span class="stats mono" id="c-stats"></span></div>
+                <div class="bigbar"><i id="c-bar"></i></div>
+                <div class="cur mono" id="c-cur"></div>
+              </div>
+              <p class="sec-title">Sessioni</p>
+              <div class="rows" id="c-rows"></div>
+            </div>
+            <div id="c-report" hidden></div>
+          </div>
+          <div class="actionbar" id="c-actions"></div>
+        </section>
+
+        <!-- 5 · PULIZIA SCHEDA -->
+        <section class="screen" data-step="5" hidden>
+          <div class="scr-head"><div><h2 id="k-title">Pulizia della scheda</h2><p id="k-sub"></p></div></div>
+          <div class="scr-body">
+            <div id="k-setup">
+              <div class="dest-grid">
+                <div class="col">
+                  <fieldset><legend class="sec-title">Cosa fare con la scheda</legend>
+                    <label class="choice"><input type="radio" name="kmode" id="k-imported" value="imported"><span><b>Elimina solo i file importati</b> <span class="pill ok">Consigliato</span><small>Copiati e verificati in questa importazione, più quelli già presenti identici sul PC.</small></span></label>
+                    <label class="choice" id="k-all-wrap"><input type="radio" name="kmode" id="k-all" value="all"><span><b>Svuota tutta la scheda</b><small id="k-all-note"></small></span></label>
+                    <label class="choice"><input type="radio" name="kmode" id="k-none" value="none"><span><b>Non pulire ora</b><small>La scheda resta com'è. Alla prossima importazione questi file verranno riconosciuti come già importati.</small></span></label>
+                  </fieldset>
+                  <div><p class="sec-title">Sessioni da eliminare dalla scheda</p><div class="klist" id="k-list"></div></div>
+                </div>
+                <div class="col">
+                  <div class="card"><h3>Spazio su EOS_DIGITAL</h3>
+                    <div class="mrow"><span>Ora</span><div class="meter"><i id="k-m-now"></i></div><span class="num" id="k-n-now"></span></div>
+                    <div class="mrow"><span>Dopo la pulizia</span><div class="meter"><i id="k-m-after"></i><i class="free" id="k-m-freed"></i></div><span class="num" id="k-n-after"></span></div>
+                    <div class="legend"><span><i style="background:var(--app-muted)"></i>Occupato</span><span><i style="background:var(--ok)"></i><span id="k-freed"></span></span></div>
+                  </div>
+                  <div class="card"><h3>Restano sulla scheda</h3><ul class="keep" id="k-keep"></ul></div>
+                  <div class="tip"><b>Doppio controllo.</b> Subito prima di eliminare ogni file l'app ricalcola l'hash della copia sul PC. Se non coincide, il file resta sulla scheda e finisce nel registro.</div>
+                </div>
+              </div>
+            </div>
+            <div id="k-run" hidden>
+              <div class="big">
+                <div class="bigtop"><span class="pct" id="k-pct">0%</span><span class="stats mono" id="k-stats"></span></div>
+                <div class="bigbar"><i id="k-bar"></i></div>
+                <div class="cur mono" id="k-cur"></div>
+              </div>
+              <div class="tip"><b>Non scollegare la scheda.</b> Se la pulizia viene interrotta, i file già eliminati restano al sicuro sul PC e gli altri restano sulla scheda.</div>
+            </div>
+            <div id="k-done" hidden></div>
+          </div>
+          <div class="actionbar" id="k-actions"></div>
+        </section>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+
+  <section class="notes" aria-labelledby="notes-h">
+    <h2 id="notes-h"><small>Note di design</small><span id="notes-title"></span></h2>
+    <ul id="notes"></ul>
+  </section>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const nextFrame=fn=>setTimeout(()=>fn(performance.now()),33);
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=mulberry32(20260927);
+const nf=new Intl.NumberFormat('it-IT');
+const pad=n=>String(n).padStart(2,'0');
+const f1=x=>x.toFixed(1);
+const fmtSize=mb=>mb>=1024?(mb/1024).toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1})+' GB':nf.format(Math.round(mb))+' MB';
+const hm=t=>{const d=new Date(t);return pad(d.getHours())+':'+pad(d.getMinutes())};
+const isoDay=t=>{const d=new Date(t);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const longDay=t=>new Date(t).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+const dur=ms=>{const m=Math.round(ms/60000),h=Math.floor(m/60);return h?`${h} h ${pad(m%60)} min`:`${m} min`};
+const secs=s=>{s=Math.max(0,Math.round(s));const m=Math.floor(s/60);return m?`${m} min ${pad(s%60)} s`:`${s} s`};
+const gapLabel=m=>m<60?m+' min':(m%60?`${Math.floor(m/60)} h ${m%60} min`:`${m/60} h`);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+/* ---------- dati di esempio: 6 gruppi di scatti ---------- */
+const CLUSTERS=[
+ {d:[2026,8,27,7,42], n:148,avg:34,mood:'dawn', hue:28, lens:['RF 24-105mm F4 L IS USM','RF 100-500mm F4.5-7.1 L'],iso:[100,400],foc:[24,500],pauses:{92:22}},
+ {d:[2026,8,27,15,30],n:96, avg:30,mood:'day',  hue:205,lens:['RF 28-70mm F2 L USM'],iso:[100,800],foc:[28,70]},
+ {d:[2026,8,27,17,20],n:214,avg:22,mood:'warm', hue:345,lens:['RF 28-70mm F2 L USM','RF 85mm F1.2 L USM'],iso:[400,3200],foc:[28,85]},
+ {d:[2026,8,29,10,5], n:132,avg:58,mood:'studio',hue:220,lens:['RF 85mm F1.2 L USM'],iso:[100,100],foc:[85,85],pauses:{70:38}},
+ {d:[2026,9,2,21,4],  n:176,avg:28,mood:'night',hue:280,lens:['RF 70-200mm F2.8 L IS USM'],iso:[1600,12800],foc:[70,200],video:true},
+ {d:[2026,9,4,8,15],  n:18, avg:70,mood:'day',  hue:95, lens:['RF 50mm F1.8 STM'],iso:[100,200],foc:[50,50]},
+];
+const ISOS=[100,200,400,800,1600,3200,6400,12800];
+const photos=[];let seq=4012;
+CLUSTERS.forEach((c,ci)=>{
+  let t=new Date(...c.d).getTime();
+  for(let i=0;i<c.n;i++){
+    if(i>0){t+=(R()<.35?1+R()*3:c.avg*(.3+R()*1.6))*1000; if(c.pauses&&c.pauses[i]) t+=c.pauses[i]*60000;}
+    const vid=c.video&&i%29===7, jpg=!vid&&R()<.62;
+    const isoOk=ISOS.filter(v=>v>=c.iso[0]&&v<=c.iso[1]);
+    photos.push({id:seq,file:(vid?'MVI_':'IMG_')+seq+(vid?'.MP4':'.CR3'),kind:vid?'video':'raw',jpg,t,ci,seed:Math.floor(R()*1e9),
+      rawMb:vid?300+R()*520:23+R()*8,jpgMb:jpg?6+R()*5:0,files:jpg?2:1,
+      lens:c.lens[Math.floor(R()*c.lens.length)],iso:isoOk[Math.floor(R()*isoOk.length)],foc:Math.round(c.foc[0]+R()*(c.foc[1]-c.foc[0]))});
+    seq++;
+  }
+});
+photos.forEach(p=>p.mb=p.rawMb+p.jpgMb);
+const firstOf=ci=>photos.find(p=>p.ci===ci).id;
+const TOTAL_FILES=photos.reduce((a,p)=>a+p.files,0);
+
+/* ---------- miniature generate (simulano le anteprime JPEG incorporate) ---------- */
+const bgCache={};
+function bg(p){
+  if(bgCache[p.id]) return bgCache[p.id];
+  const r=mulberry32(p.seed),c=CLUSTERS[p.ci],h=c.hue+(r()*24-12),hz=Math.round(38+r()*34);let s;
+  if(c.mood==='night'){
+    s=`radial-gradient(circle at ${f1(r()*100)}% ${f1(15+r()*30)}%, hsl(${f1(h)} 90% 62% / .9) 0, transparent 28%), radial-gradient(circle at ${f1(r()*100)}% ${f1(25+r()*30)}%, hsl(${f1(h+70)} 90% 55% / .75) 0, transparent 26%), radial-gradient(ellipse 30% 40% at ${f1(35+r()*30)}% 85%, hsl(${f1(h)} 25% 22%) 0 60%, transparent 62%), linear-gradient(180deg, hsl(${f1(h+20)} 40% 5%), hsl(${f1(h)} 35% 13%))`;
+  }else if(c.mood==='studio'){
+    const x=f1(40+r()*20);
+    s=`radial-gradient(ellipse 9% 14% at ${x}% 34%, hsl(24 38% ${f1(52+r()*14)}%) 0 92%, transparent 96%), radial-gradient(ellipse 22% 36% at ${x}% 78%, hsl(${f1(200+r()*140)} 22% ${f1(22+r()*20)}%) 0 92%, transparent 95%), radial-gradient(ellipse at 50% 38%, hsl(${f1(h)} 9% ${f1(44+r()*14)}%), hsl(${f1(h)} 10% ${f1(16+r()*8)}%))`;
+  }else{
+    const L=c.mood==='dawn'?[56,72]:c.mood==='warm'?[42,58]:[62,74];
+    const sun=r()<.55?`radial-gradient(circle at ${f1(15+r()*70)}% ${hz-8}%, hsl(${f1(h+40)} 95% 86% / .95) 0 5%, hsl(${f1(h+30)} 90% 70% / .35) 9%, transparent 22%), `:'';
+    const hill=`radial-gradient(ellipse 60% 30% at ${f1(r()*100)}% ${hz+12}%, hsl(${f1(h+150)} 20% ${f1(13+r()*10)}%) 0 70%, transparent 72%), `;
+    s=sun+hill+`linear-gradient(180deg, hsl(${f1(h+10)} ${f1(40+r()*20)}% ${f1(L[0]+r()*10)}%) 0%, hsl(${f1(h+30)} 55% ${f1(L[1]+r()*10)}%) ${hz}%, hsl(${f1(h+140)} 18% ${f1(18+r()*14)}%) ${hz}%, hsl(${f1(h+150)} 15% ${f1(8+r()*10)}%) 100%)`;
+  }
+  return bgCache[p.id]=s;
+}
+const thumb=(p,big)=>`<div class="ph" style="background:${bg(p)}" title="${esc(p.file)} · ${hm(p.t)}">${p.kind==='video'?'<span class="play"></span>':''}${big?`<span class="cap">${hm(p.t)}</span>${p.jpg?'<span class="bdg">+JPG</span>':''}`:''}</div>`;
+
+/* ---------- stato ---------- */
+const state={step:2,gap:60,names:{},sel:{},focus:null,dest:'D:\\Foto',tpl:'year',dup:'skip',sub:'pv',verify:true,eject:true,cleanPrompt:true,fmt:'both',vid:true,copy:null,clean:null};
+/* file e MB che verranno copiati per uno scatto, secondo il formato scelto */
+function pFiles(p,fmt=state.fmt,vid=state.vid){
+  if(p.kind==='video')return vid?1:0;
+  return fmt==='both'?p.files:fmt==='raw'?1:(p.jpg?1:0);
+}
+function pMb(p,fmt=state.fmt,vid=state.vid){
+  if(p.kind==='video')return vid?p.mb:0;
+  return fmt==='both'?p.mb:fmt==='raw'?p.rawMb:p.jpgMb;
+}
+state.names[firstOf(0)]='Alba al lago di Como';
+state.names[firstOf(1)]='Matrimonio Bianchi - cerimonia';
+state.names[firstOf(2)]='Matrimonio Bianchi - ricevimento';
+state.names[firstOf(3)]='Ritratti studio Giulia';
+state.sel[firstOf(5)]=false;
+
+let sessions=[];
+function computeSessions(){
+  sessions=[];let cur=null,last=0;
+  for(const p of photos){ if(!cur||p.t-last>state.gap*60000){cur={key:String(p.id),photos:[]};sessions.push(cur)} cur.photos.push(p);last=p.t; }
+  sessions.forEach(s=>{const ph=s.photos;s.start=ph[0].t;s.end=ph[ph.length-1].t;
+    s.files=ph.reduce((a,p)=>a+pFiles(p),0);s.mb=ph.reduce((a,p)=>a+pMb(p),0);
+    s.raw=ph.filter(p=>p.kind==='raw').length;s.jpg=ph.filter(p=>p.jpg).length;s.vid=ph.filter(p=>p.kind==='video').length;
+    s.impRaw=state.fmt==='jpg'?0:s.raw;s.impJpg=state.fmt==='raw'?0:s.jpg;s.impVid=state.vid?s.vid:0;
+    s.cardMb=ph.reduce((a,p)=>a+p.mb,0);});
+  if(!sessions.some(s=>s.key===state.focus)) state.focus=sessions[0].key;
+}
+const byKey=k=>sessions.find(s=>s.key===k);
+const isSel=s=>state.sel[s.key]!==false;
+const selected=()=>sessions.filter(isSel);
+const period=h=>h<5?'notte':h<12?'mattina':h<18?'pomeriggio':h<22?'sera':'notte';
+const nameOf=s=>state.names[s.key]??cap(period(new Date(s.start).getHours()));
+const sanitize=n=>n.replace(/[\\/:*?"<>|]/g,'_').trim().replace(/[. ]+$/,'');
+function folderOf(s){
+  const d=new Date(s.start),nm=sanitize(nameOf(s)),leaf=(isoDay(s.start)+' '+nm).trim();
+  return state.tpl==='flat'?[leaf]:state.tpl==='year'?[String(d.getFullYear()),leaf]:[String(d.getFullYear()),pad(d.getMonth()+1),leaf];
+}
+function validate(s,counts){
+  const raw=nameOf(s).trim();
+  if(!raw) return ['warn','Senza nome: la cartella userà solo la data'];
+  if(sanitize(raw)!==raw) return ['warn','Caratteri non ammessi sostituiti con _'];
+  if(isSel(s)&&counts[folderOf(s).join('\\').toLowerCase()]>1) return ['warn','Stessa cartella di un\'altra sessione: i file verranno uniti'];
+  return null;
+}
+
+/* ---------- 2 · sessioni ---------- */
+function cardHTML(s){
+  const n=s.photos.length,k=Math.min(8,n),sample=Array.from({length:k},(_,i)=>s.photos[Math.floor(i*(n-1)/Math.max(1,k-1))]);
+  return `<article class="sess${isSel(s)?'':' off'}${state.focus===s.key?' focus':''}" data-key="${s.key}">
+    <input type="checkbox" class="sel" id="sel-${s.key}" aria-label="Importa la sessione delle ${hm(s.start)}" ${isSel(s)?'checked':''}>
+    <div class="sess-main">
+      <div class="sess-top"><span class="day">${longDay(s.start)}</span><span class="mono">${hm(s.start)} → ${hm(s.end)}</span><span>${dur(s.end-s.start)}</span></div>
+      <label class="vh" for="name-${s.key}">Nome della cartella</label>
+      <input class="name" id="name-${s.key}" value="${esc(nameOf(s))}" placeholder="Dai un nome alla sessione" spellcheck="false" autocomplete="off">
+      <div class="pathrow"><span class="path" data-path></span><span class="pill" data-val hidden></span></div>
+      <div class="strip">${sample.map(p=>thumb(p)).join('')}</div>
+      <div class="chips"><span>${nf.format(s.raw)} foto</span>${s.vid?`<span>${s.vid} video</span>`:''}<span>${nf.format(s.files)} file da importare</span><span>${fmtSize(s.mb)}</span></div>
+    </div></article>`;
+}
+function updateMeta(){
+  const counts={};selected().forEach(s=>{const k=folderOf(s).join('\\').toLowerCase();counts[k]=(counts[k]||0)+1});
+  $$('#list .sess').forEach(el=>{
+    const s=byKey(el.dataset.key),parts=folderOf(s);
+    el.querySelector('[data-path]').innerHTML=esc(state.dest.replace(/[\\/]+$/,''))+'\\'+parts.slice(0,-1).map(x=>esc(x)+'\\').join('')+'<em>'+esc(parts[parts.length-1])+'</em>';
+    const v=validate(s,counts),pill=el.querySelector('[data-val]');
+    pill.hidden=!v; if(v){pill.className='pill '+v[0];pill.textContent=v[1];}
+  });
+  renderSummary();
+}
+function renderSummary(){
+  const sel=selected(),files=sel.reduce((a,s)=>a+s.files,0),mb=sel.reduce((a,s)=>a+s.mb,0);
+  $('#sum2').innerHTML=`<b>${sel.length}</b> di ${sessions.length} sessioni · <b>${nf.format(files)}</b> file · <b>${fmtSize(mb)}</b>`;
+  $('#list-count').textContent=`${sessions.length} sessioni trovate`;
+  $('#st2').textContent=`${sel.length} di ${sessions.length} selezionate`;
+  $('#to3').disabled=!sel.length;
+}
+function renderSessions(){
+  $('#list').innerHTML=sessions.map(cardHTML).join('');
+  updateMeta();renderPreview();
+}
+function renderPreview(){
+  const s=byKey(state.focus);if(!s)return;
+  const ph=s.photos,lenses=[...new Set(ph.map(p=>p.lens))],isos=ph.filter(p=>p.kind==='raw').map(p=>p.iso),focs=ph.map(p=>p.foc);
+  const span=Math.max(1,s.end-s.start),show=ph.slice(0,47);
+  const ticks=ph.map(p=>`<i style="left:${f1(2+96*(p.t-s.start)/span)}%"></i>`).join('');
+  $('#preview').innerHTML=`
+    <div><h3>${esc(nameOf(s)||'Senza nome')}</h3><div class="sub">${longDay(s.start)} · ${hm(s.start)}–${hm(s.end)} · ${dur(s.end-s.start)}</div></div>
+    <div><div class="timeline" aria-label="Distribuzione degli scatti nel tempo">${ticks}</div></div>
+    <div class="tl-lbl" style="margin-top:-8px"><span>${hm(s.start)}</span><span>${nf.format(ph.length)} elementi</span><span>${hm(s.end)}</span></div>
+    <dl class="exif">
+      <dt>Camera</dt><dd>Canon EOS R6 Mark II</dd>
+      <dt>Obiettivi</dt><dd>${lenses.map(esc).join('<br>')}</dd>
+      <dt>Focale</dt><dd class="mono">${Math.min(...focs)===Math.max(...focs)?Math.min(...focs):Math.min(...focs)+'–'+Math.max(...focs)} mm</dd>
+      <dt>ISO</dt><dd class="mono">${Math.min(...isos)===Math.max(...isos)?Math.min(...isos):Math.min(...isos)+'–'+nf.format(Math.max(...isos))}</dd>
+      <dt>Sulla scheda</dt><dd class="mono">${s.raw} CR3${s.jpg?' · '+s.jpg+' JPG':''}${s.vid?' · '+s.vid+' MP4':''} · ${fmtSize(s.cardMb)}</dd>
+    </dl>
+    <div class="pgrid">${show.map(p=>thumb(p,true)).join('')}${ph.length>show.length?`<div class="ph more">+${ph.length-show.length}</div>`:''}</div>`;
+}
+$('#list').addEventListener('click',e=>{
+  if(e.target.closest('input,label'))return;
+  const el=e.target.closest('.sess');if(!el)return;
+  state.focus=el.dataset.key;$$('#list .sess').forEach(x=>x.classList.toggle('focus',x===el));renderPreview();
+});
+$('#list').addEventListener('focusin',e=>{
+  const el=e.target.closest('.sess');if(!el||!e.target.classList.contains('name')||state.focus===el.dataset.key)return;
+  state.focus=el.dataset.key;$$('#list .sess').forEach(x=>x.classList.toggle('focus',x===el));renderPreview();
+});
+$('#list').addEventListener('input',e=>{
+  if(!e.target.classList.contains('name'))return;
+  const key=e.target.closest('.sess').dataset.key;state.names[key]=e.target.value;updateMeta();
+  if(state.focus===key) $('#preview h3').textContent=e.target.value||'Senza nome';
+});
+$('#list').addEventListener('change',e=>{
+  if(!e.target.classList.contains('sel'))return;
+  const el=e.target.closest('.sess');state.sel[el.dataset.key]=e.target.checked;el.classList.toggle('off',!e.target.checked);updateMeta();
+});
+$('#gap').addEventListener('input',e=>{state.gap=+e.target.value;$('#gap-out').textContent=gapLabel(state.gap);computeSessions();renderSessions();});
+$('#sel-all').onclick=()=>{sessions.forEach(s=>state.sel[s.key]=true);renderSessions()};
+$('#sel-none').onclick=()=>{sessions.forEach(s=>state.sel[s.key]=false);renderSessions()};
+
+/* ---------- 1 · sorgente ---------- */
+$('#sum1').innerHTML=`Selezionata <b>EOS_DIGITAL</b> · circa <b>${nf.format(TOTAL_FILES)}</b> file in DCIM`;
+$('#btn-scan').onclick=()=>{
+  const btn=$('#btn-scan');btn.disabled=true;$('#scan').hidden=false;
+  const D=reduce?300:1700,t0=performance.now(),folders=['DCIM\\100EOSR6','DCIM\\101EOSR6','DCIM\\102EOSR6'];
+  (function f(now){const p=Math.min(1,(now-t0)/D),n=Math.round(p*TOTAL_FILES);
+    $('#scan-bar').style.width=(p*100)+'%';$('#scan-b').textContent=nf.format(n)+' / '+nf.format(TOTAL_FILES);
+    $('#scan-a').textContent=p<1?'Lettura EXIF e anteprime incorporate…':'Scansione completata';
+    $('#scan-c').textContent=folders[Math.min(2,Math.floor(p*3))]+'\\'+(photos[Math.min(photos.length-1,Math.floor(p*photos.length))].file);
+    $('#scan-d').textContent=Math.max(1,Math.round(p*sessions.length))+' sessioni finora';
+    if(p<1)nextFrame(f);else setTimeout(()=>{btn.disabled=false;$('#scan').hidden=true;go(2)},reduce?0:350);
+  })(t0);
+};
+
+/* ---------- 3 · destinazione ---------- */
+function renderDest(){
+  const sel=selected(),root={};
+  sel.forEach(s=>{let node=root;folderOf(s).forEach(seg=>{node[seg]=node[seg]||{};node=node[seg]});(node.__s=node.__s||[]).push(s)});
+  const lines=[`<span class="x">${esc(state.dest.replace(/[\\/]+$/,''))}</span>`];
+  (function walk(node,pre){
+    const keys=Object.keys(node).filter(k=>k!=='__s').sort();
+    keys.forEach((k,i)=>{
+      const last=i===keys.length-1,child=node[k],ss=child.__s;
+      let line=`<span class="g">${pre}${last?'└─ ':'├─ '}</span>${esc(k)}`;
+      if(ss){const files=ss.reduce((a,s)=>a+s.files,0);line+=`  <span class="c">${nf.format(files)} file</span>`;}
+      lines.push(line);
+      const np=pre+(last?'   ':'│  ');
+      if(ss&&state.sub!=='none'){
+        const raw=ss.reduce((a,s)=>a+s.impRaw,0),jpg=ss.reduce((a,s)=>a+s.impJpg,0),vid=ss.reduce((a,s)=>a+s.impVid,0);
+        const subs=(state.sub==='format'?[['RAW',raw],['JPG',jpg],['Video',vid]]:[['Foto',raw+jpg],['Video',vid]]).filter(x=>x[1]);
+        subs.forEach((x,j)=>lines.push(`<span class="g">${np}${j===subs.length-1?'└─ ':'├─ '}</span>${x[0]}  <span class="c">${nf.format(x[1])}</span>`));
+      }
+      walk(child,np);
+    });
+  })(root,'');
+  $('#tree').innerHTML=sel.length?lines.join('\n'):'<span class="c">Nessuna sessione selezionata</span>';
+  $('#tree-pill').textContent=`${sel.length} cartelle`;
+  const mb=sel.reduce((a,s)=>a+s.mb,0),gb=mb/1024,total=2000,used=1210,free=total-used-gb;
+  $('#space-imp').style.width=f1(100*gb/total)+'%';
+  $('#space-req').textContent='Questa importazione '+fmtSize(mb);
+  $('#space-free').textContent='Liberi dopo '+free.toLocaleString('it-IT',{maximumFractionDigits:0})+' GB';
+  $('#sum3').innerHTML=`<b>${sel.length}</b> sessioni · <b>${nf.format(sel.reduce((a,s)=>a+s.files,0))}</b> file · richiesti <b>${fmtSize(mb)}</b>`;
+  $('#st3').textContent=state.dest;
+  const enough=free>0,sp=$('#space-pill');
+  sp.className='pill '+(enough?'ok':'err');sp.textContent=enough?'Sufficiente':'Mancano '+Math.ceil(-free)+' GB';
+  const all=sel.flatMap(s=>s.photos),shots=all.filter(p=>p.kind==='raw'),jpgs=shots.filter(p=>p.jpg),noJ=shots.length-jpgs.length;
+  const note=$('#fmt-note');note.className='note';
+  if(state.fmt==='both') note.textContent=`${nf.format(shots.length)} scatti selezionati, ${nf.format(jpgs.length)} con RAW e JPEG.`;
+  else if(state.fmt==='raw') note.textContent=`${nf.format(jpgs.length)} JPEG non verranno copiati · risparmi ${fmtSize(jpgs.reduce((a,p)=>a+p.jpgMb,0))}.`;
+  else{note.textContent=(noJ?`${nf.format(noJ)} scatti hanno solo il RAW e non verranno importati · `:'')+`risparmi ${fmtSize(shots.reduce((a,p)=>a+p.rawMb,0))}.`;if(noJ)note.className='note warn';}
+  $('#to4').disabled=!sel.length||!enough||!sel.reduce((a,s)=>a+s.files,0);
+}
+$('#dest').addEventListener('input',e=>{state.dest=e.target.value||'D:\\';renderDest()});
+$('#browse').onclick=()=>toast('Qui si apre il selettore di cartelle del sistema operativo');
+$$('input[name=tpl]').forEach(r=>r.addEventListener('change',()=>{state.tpl=r.value;renderDest()}));
+$$('input[name=dup]').forEach(r=>r.addEventListener('change',()=>{state.dup=r.value}));
+$$('input[name=sub]').forEach(r=>r.addEventListener('change',()=>{state.sub=r.value;renderDest()}));
+$('#o-verify').onchange=e=>{state.verify=e.target.checked;renderDest()};
+$('#o-eject').onchange=e=>{state.eject=e.target.checked};
+$$('input[name=fmt]').forEach(r=>r.addEventListener('change',()=>{state.fmt=r.value;computeSessions();renderDest()}));
+$('#o-vid').onchange=e=>{state.vid=e.target.checked;computeSessions();renderDest()};
+$('#o-clean').onchange=e=>{state.cleanPrompt=e.target.checked};
+$('#to3').onclick=()=>go(3);
+$('#to4').onclick=()=>{state.copy=null;state.clean=null;$('#st5').textContent='Dopo la copia';go(4)};
+$$('[data-nav]').forEach(b=>b.onclick=()=>go(+b.dataset.nav));
+
+/* ---------- 4 · copia simulata ---------- */
+const SPEED=141;
+function startCopy(){
+  const sel=selected();
+  if(!sel.length){toast('Seleziona almeno una sessione');go(2);return;}
+  const largest=sel.reduce((a,s)=>s.files>a.files?s:a,sel[0]);
+  const plan=sel.map((s,i)=>({s,name:nameOf(s)||isoDay(s.start),folder:folderOf(s).join('\\'),mb:s.mb,files:s.files,
+    skipped:i===0&&state.dup==='skip'?12:0,errors:s===largest?1:0}));
+  let acc=0;plan.forEach(p=>{p.from=acc;acc+=p.mb;});
+  const bad=largest.photos[Math.min(37,largest.photos.length-1)];
+  state.copy={plan,total:acc,fmt:state.fmt,vid:state.vid,p:0,paused:false,done:false,last:0,dur:reduce?1500:9000,badFile:bad.file,retried:false};
+  $('#c-run').hidden=false;$('#c-report').hidden=true;
+  $('#c-title').textContent='Copia in corso';
+  $('#c-sub').textContent=`Da EOS_DIGITAL (E:) a ${state.dest} · ${state.verify?'verifica xxHash64 attiva':'senza verifica'}`;
+  $('#c-rows').innerHTML=plan.map((p,i)=>`<div class="crow"><div class="nm">${esc(p.name)}<small>${esc(p.folder)}</small></div><div class="bar"><i id="cb-${i}"></i></div><div class="num">${fmtSize(p.mb)}</div><span class="pill" id="cs-${i}">In attesa</span></div>`).join('');
+  renderCopyActions();
+  nextFrame(tick);
+}
+function renderCopyActions(){
+  const c=state.copy;
+  if(c&&!c.done){
+    $('#c-actions').innerHTML=`<span class="sum">${c.plan.length} sessioni · ${fmtSize(c.total)}</span><button class="btn ghost" id="c-cancel">Annulla</button><button class="btn" id="c-pause">${c.paused?'Riprendi':'Pausa'}</button>`;
+    $('#c-pause').onclick=()=>{c.paused=!c.paused;$('#c-pause').textContent=c.paused?'Riprendi':'Pausa';$('#st4').textContent=c.paused?'In pausa':'In corso';};
+    $('#c-cancel').onclick=()=>{c.done=true;state.copy=null;toast('Copia annullata: i file parziali sono stati rimossi');go(3)};
+  }
+}
+function tick(now){
+  const c=state.copy;if(!c||c.done)return;
+  const dt=c.last?now-c.last:0;c.last=now;
+  if(!c.paused)c.p=Math.min(1,c.p+dt/c.dur);
+  const done=c.p*c.total,speed=Math.round(SPEED+9*Math.sin(now/650));
+  $('#c-pct').textContent=Math.floor(c.p*100)+'%';
+  $('#c-bar').style.width=(c.p*100)+'%';
+  $('#c-stats').textContent=`${fmtSize(done)} di ${fmtSize(c.total)} · ${c.paused?'in pausa':speed+' MB/s'} · ${secs((c.total-done)/SPEED)} rimanenti`;
+  $('#st4').textContent=c.paused?'In pausa':Math.floor(c.p*100)+'% copiato';
+  c.plan.forEach((p,i)=>{
+    const f=Math.max(0,Math.min(1,(done-p.from)/p.mb));
+    $('#cb-'+i).style.width=(f*100)+'%';
+    const st=$('#cs-'+i);
+    if(f<=0){st.className='pill';st.textContent='In attesa';}
+    else if(f<(state.verify?.9:1)){st.className='pill new';st.textContent='In copia';
+      const ph=p.s.photos[Math.min(p.s.photos.length-1,Math.floor(f*p.s.photos.length))];
+      const asJpg=ph.kind!=='video'&&c.fmt==='jpg',fn=asJpg?ph.file.replace('.CR3','.JPG'):ph.file,sub=ph.kind==='video'?'\\Video':asJpg?'\\JPG':'\\RAW';
+      $('#c-cur').innerHTML=`<b>${esc(fn)}</b> → ${esc(state.dest)}\\${esc(p.folder)}${state.sub==='none'?'':state.sub==='format'?sub:(ph.kind==='video'?'\\Video':'\\Foto')}`;}
+    else if(f<1){st.className='pill warn';st.textContent='Verifica';}
+    else{st.className=p.errors?'pill err':'pill ok';st.textContent=p.errors?p.errors+' errore':(state.verify?'Verificata':'Completata');}
+  });
+  if(c.p>=1){c.done=true;renderReport();return;}
+  nextFrame(tick);
+}
+function renderReport(){
+  const c=state.copy;
+  const errs=c.retried?0:c.plan.reduce((a,p)=>a+p.errors,0);
+  const skipped=c.plan.reduce((a,p)=>a+p.skipped,0);
+  const copied=c.plan.reduce((a,p)=>a+p.files-p.skipped,0)-errs;
+  const skMb=skipped*31,copiedMb=c.total-skMb;
+  $('#c-run').hidden=true;$('#c-report').hidden=false;
+  $('#c-title').innerHTML='<span class="okhead">Importazione completata</span>';
+  $('#c-sub').textContent=`${c.plan.length} sessioni in ${state.dest} · ${state.eject?'scheda pronta per essere espulsa':'scheda ancora collegata'}`;
+  $('#st4').textContent=errs?'Completata, 1 errore':'Completata';
+  const rows=c.plan.map(p=>{const e=c.retried?0:p.errors;return `<tr><td><b>${esc(p.name)}</b><span class="p">${esc(state.dest)}\\${esc(p.folder)}</span></td><td class="n">${nf.format(p.files-p.skipped-e)}</td><td class="n">${p.skipped}</td><td class="n">${e}</td><td class="n">${fmtSize(p.mb)}</td><td><span class="pill ${e?'err':'ok'}">${e?'Con errori':(state.verify?'Verificata':'Copiata')}</span></td></tr>`}).join('');
+  $('#c-report').innerHTML=`
+    <div class="tiles">
+      <div class="tile ok"><div class="k">Copiati</div><div class="v">${nf.format(copied)}</div><div class="d">${fmtSize(copiedMb)}${state.verify?' · tutti verificati':''}</div></div>
+      <div class="tile"><div class="k">Già presenti</div><div class="v">${skipped}</div><div class="d">Saltati perché identici</div></div>
+      <div class="tile ${errs?'err':''}"><div class="k">Errori</div><div class="v">${errs}</div><div class="d">${errs?'Da riprovare':'Nessun problema'}</div></div>
+      <div class="tile"><div class="k">Durata</div><div class="v">${secs(c.total/SPEED)}</div><div class="d">Media ${SPEED} MB/s</div></div>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>Sessione</th><th class="n">Copiati</th><th class="n">Saltati</th><th class="n">Errori</th><th class="n">Dimensione</th><th>Stato</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${errs?`<div class="errbox"><div><b>${esc(c.badFile)}</b> non è stato copiato: errore di lettura dopo 3 tentativi (settore della scheda illeggibile). Il file sulla scheda non è stato modificato.</div><button class="btn" id="c-retry">Riprova 1 file</button></div>`:''}`;
+  const cleaned=state.clean&&state.clean.done;
+  $('#c-actions').innerHTML=`<span class="sum">Report salvato in <b class="mono">${esc(state.dest)}\\.psi\\report-2026-10-06.csv</b></span><button class="btn ghost" id="c-new">Nuova importazione</button><button class="btn" id="c-csv">Esporta CSV</button><button class="btn" id="c-open">Apri cartella</button><button class="btn${state.cleanPrompt?' primary':''}" id="c-clean">${cleaned?'Vedi pulizia scheda':'Avanti: pulisci la scheda'}</button>`;
+  const r=$('#c-retry');if(r)r.onclick=()=>{c.retried=true;toast('Copiato al secondo tentativo con lettura lenta');renderReport()};
+  $('#c-new').onclick=newImport;
+  $('#c-csv').onclick=()=>toast('Report esportato in CSV');
+  $('#c-open').onclick=()=>toast('Apre '+state.dest+' nel file manager del sistema');
+  $('#c-clean').onclick=()=>go(5);
+  if(state.cleanPrompt&&!state.clean) $('#st5').textContent='Pronta';
+}
+function newImport(){state.copy=null;state.clean=null;$('#st4').textContent='In attesa';$('#st5').textContent='Dopo la copia';go(1)}
+
+/* ---------- 5 · pulizia scheda ---------- */
+const CARD_MB=65536,SYSTEM_MB=350,ERR_MB=31;
+let cardUsed=photos.reduce((a,p)=>a+p.mb,0)+SYSTEM_MB,ejected=false;
+function renderCard(){
+  const w=f1(100*cardUsed/CARD_MB)+'%';
+  $('#card-meter').style.width=w;$('#dev-sd-meter').style.width=w;
+  $('#card-used').textContent=`${fmtSize(cardUsed)} di 64 GB usati`;
+  $('#dev-sd-size').textContent=`${fmtSize(cardUsed)} / 64 GB`;
+  const live=$('#card-live');live.textContent=ejected?'Espulsa · puoi rimuoverla':'Collegata · E:\\';live.style.color=ejected?'var(--app-muted)':'';
+}
+function cleanModel(){
+  const c=state.copy,k=state.clean,inPlan=new Set();
+  c.plan.forEach(p=>p.s.photos.forEach(x=>inPlan.add(x.id)));
+  const rows=c.plan.map(p=>{const e=c.retried?0:p.errors;return{p,key:p.s.key,inc:k.sel[p.s.key]!==false,files:p.files-e,mb:p.mb-e*ERR_MB,err:e}});
+  const ni=photos.filter(x=>!inPlan.has(x.id)),niFiles=ni.reduce((a,x)=>a+x.files,0),niMb=ni.reduce((a,x)=>a+x.mb,0);
+  const niNames=sessions.filter(s=>!inPlan.has(s.photos[0].id)).map(s=>nameOf(s)+' · '+new Date(s.start).toLocaleDateString('it-IT',{day:'numeric',month:'short'}));
+  const errFiles=rows.reduce((a,r)=>a+r.err,0),excl=rows.filter(r=>!r.inc);
+  let fmtLeft=0,fmtLeftMb=0;
+  c.plan.forEach(p=>p.s.photos.forEach(x=>{fmtLeft+=x.files-pFiles(x,c.fmt,c.vid);fmtLeftMb+=x.mb-pMb(x,c.fmt,c.vid)}));
+  const canAll=!niFiles&&!errFiles&&!excl.length&&!fmtLeft;
+  if(k.mode==='all'&&!canAll)k.mode='imported';
+  let del={files:0,mb:0};
+  if(k.mode==='imported')rows.filter(r=>r.inc).forEach(r=>{del.files+=r.files;del.mb+=r.mb});
+  if(k.mode==='all')del={files:rows.reduce((a,r)=>a+r.files,0),mb:cardUsed};
+  return{rows,ni,niFiles,niMb,niNames,errFiles,excl,canAll,del,fmtLeft,fmtLeftMb};
+}
+function renderClean(){
+  const k=state.clean,c=state.copy,m=cleanModel();
+  $('#k-setup').hidden=k.running||k.done;$('#k-run').hidden=!k.running;$('#k-done').hidden=!k.done;
+  if(k.done)return renderCleanDone();
+  if(k.running)return;
+  $('#k-title').textContent='Pulizia della scheda';
+  $('#k-sub').textContent=`La copia su ${state.dest} è completata${state.verify?' e verificata':''}. Libera spazio su EOS_DIGITAL eliminando solo ciò che è già al sicuro.`;
+  $$('input[name=kmode]').forEach(r=>r.checked=r.value===k.mode);
+  $('#k-all').disabled=!m.canAll;$('#k-all-wrap').classList.toggle('disabled',!m.canAll);
+  $('#k-all-note').textContent=m.canAll?'Elimina tutto, comprese le cartelle di sistema della fotocamera.':
+    `Non disponibile: ${nf.format(m.niFiles+m.errFiles+m.fmtLeft+m.excl.reduce((a,r)=>a+r.files,0))} file non sono al sicuro sul PC.`;
+  const imp=k.mode==='imported';
+  $('#k-list').innerHTML=m.rows.map(r=>`<label class="krow${imp&&r.inc?'':' dim'}"><input type="checkbox" data-k="${r.key}" id="k-${r.key}" ${r.inc?'checked':''} ${imp?'':'disabled'}>
+    <span style="min-width:0"><b>${esc(r.p.name)}</b><small>${r.err?`${r.err} file con errore resta sulla scheda`:(r.p.skipped?`${r.p.skipped} già presenti, identici`:(state.verify?'Tutti verificati':'Copiati'))}</small></span>
+    <span class="num">${nf.format(r.files)} file<br>${fmtSize(r.mb)}</span></label>`).join('');
+  const after=Math.max(0,cardUsed-m.del.mb);
+  $('#k-m-now').style.width=f1(100*cardUsed/CARD_MB)+'%';$('#k-n-now').textContent=fmtSize(cardUsed);
+  $('#k-m-after').style.width=f1(100*after/CARD_MB)+'%';$('#k-m-freed').style.width=f1(100*m.del.mb/CARD_MB)+'%';
+  $('#k-n-after').textContent=fmtSize(after);
+  $('#k-freed').textContent=m.del.mb?'Spazio liberato '+fmtSize(m.del.mb):'Nessuno spazio liberato';
+  const keep=[];
+  if(k.mode==='none') keep.push(['Tutti i file attuali','La scheda non viene modificata',fmtSize(cardUsed)]);
+  else{
+    if(m.niFiles) keep.push([`${nf.format(m.niFiles)} file mai importati`,m.niNames.join(', '),fmtSize(m.niMb)]);
+    if(m.fmtLeft){
+      const what=[c.fmt==='raw'?'JPEG':c.fmt==='jpg'?'RAW':null,c.vid?null:'video'].filter(Boolean).join(' e ');
+      keep.push([`${nf.format(m.fmtLeft)} file ${what} non importati`,`Hai scelto di importare ${c.fmt==='raw'?'solo i RAW':c.fmt==='jpg'?'solo i JPEG':'RAW e JPEG'}${c.vid?'':', senza video'}`,fmtSize(m.fmtLeftMb)]);
+    }
+    if(m.errFiles) keep.push([`${m.errFiles} file non copiato`,`${c.badFile} · errore di lettura`,fmtSize(m.errFiles*ERR_MB)]);
+    if(imp) m.excl.forEach(r=>keep.push([`${nf.format(r.files)} file esclusi da te`,r.p.name,fmtSize(r.mb)]));
+    if(k.mode!=='all') keep.push(['Cartelle di sistema','MISC, CANONMSC e file di indice della fotocamera',fmtSize(SYSTEM_MB)]);
+    if(!keep.length) keep.push(['Niente','La scheda sarà vuota','0 MB']);
+  }
+  $('#k-keep').innerHTML=keep.map(x=>`<li><span><b>${esc(x[0])}</b><br>${esc(x[1])}</span><span class="num">${x[2]}</span></li>`).join('');
+  if(k.mode==='none'){
+    $('#k-actions').innerHTML=`<span class="sum">La scheda resterà com'è.</span><button class="btn ghost" data-back>Torna al report</button><button class="btn" id="k-skip">Salta la pulizia</button>`;
+    $('#k-skip').onclick=()=>{k.done=true;k.result={files:0,mb:0,skipped:true};renderClean();$('#st5').textContent='Saltata';};
+  }else{
+    $('#k-actions').innerHTML=`<label class="sum ack"><input type="checkbox" id="k-ack" ${k.ack?'checked':''}><span>Ho capito: i file eliminati dalla scheda non vanno nel cestino</span></label><button class="btn ghost" data-back>Torna al report</button><button class="btn danger" id="k-go" ${k.ack&&m.del.files?'':'disabled'}>Elimina ${nf.format(m.del.files)} file · ${fmtSize(m.del.mb)}</button>`;
+    $('#k-ack').onchange=e=>{k.ack=e.target.checked;$('#k-go').disabled=!(k.ack&&m.del.files)};
+    $('#k-go').onclick=()=>runClean(m);
+  }
+  $('[data-back]').onclick=()=>go(4);
+}
+$('#k-list').addEventListener('change',e=>{const key=e.target.dataset.k;if(!key)return;state.clean.sel[key]=e.target.checked;renderClean()});
+$$('input[name=kmode]').forEach(r=>r.addEventListener('change',()=>{state.clean.mode=r.value;renderClean()}));
+function runClean(m){
+  const k=state.clean,c=state.copy;
+  const bad=c.retried?null:c.badFile;
+  const list=k.mode==='all'?photos.filter(x=>x.file!==bad):m.rows.filter(r=>r.inc).flatMap(r=>r.p.s.photos).filter(x=>x.file!==bad);
+  k.running=true;k.p=0;k.last=0;k.stop=false;k.result=m.del;renderClean();
+  $('#k-title').textContent='Pulizia in corso';
+  $('#k-sub').textContent='Per ogni file: confronto dell\'hash con la copia sul PC, poi eliminazione dalla scheda.';
+  $('#k-actions').innerHTML=`<span class="sum">Non scollegare EOS_DIGITAL</span><button class="btn" id="k-stop">Interrompi</button>`;
+  $('#k-stop').onclick=()=>{k.stop=true};
+  $('#st5').textContent='In corso';
+  const D=reduce?1200:5000;
+  (function f(now){
+    const dt=k.last?now-k.last:0;k.last=now;k.p=Math.min(1,k.p+dt/D);
+    const n=Math.round(k.p*m.del.files),ph=list[Math.min(list.length-1,Math.floor(k.p*list.length))];
+    $('#k-pct').textContent=Math.floor(k.p*100)+'%';$('#k-bar').style.width=(k.p*100)+'%';
+    $('#k-stats').textContent=`${nf.format(n)} di ${nf.format(m.del.files)} file · ${fmtSize(k.p*m.del.mb)} liberati`;
+    if(ph){const lbl=ph.kind==='video'||c.fmt==='raw'?ph.file:c.fmt==='jpg'?ph.file.replace('.CR3','.JPG'):ph.file+(ph.jpg?' + JPG':'');
+      $('#k-cur').innerHTML=`<b>${esc(lbl)}</b> · hash coincide → eliminato`;}
+    if(k.p<1&&!k.stop)return nextFrame(f);
+    k.result={files:n,mb:k.p*m.del.mb,stopped:k.p<1};
+    cardUsed=Math.max(0,cardUsed-k.result.mb);
+    k.running=false;k.done=true;
+    if(state.eject&&!k.result.stopped)ejected=true;
+    renderCard();renderClean();
+    $('#st5').textContent=k.result.stopped?'Interrotta':'Completata';
+  })(performance.now());
+}
+function renderCleanDone(){
+  const k=state.clean,r=k.result,skip=r.skipped;
+  const leftFiles=TOTAL_FILES-(skip?0:r.files);
+  $('#k-title').innerHTML=skip?'<span class="okhead neutral">Pulizia saltata</span>':`<span class="okhead">${r.stopped?'Pulizia interrotta':'Scheda pulita'}</span>`;
+  $('#k-sub').textContent=skip?'Nessun file è stato eliminato da EOS_DIGITAL.':(ejected?'EOS_DIGITAL è stata espulsa: puoi rimuoverla in sicurezza.':'EOS_DIGITAL è ancora collegata.');
+  $('#k-done').innerHTML=skip?`<div class="tip">I file restano sulla scheda. Alla prossima importazione verranno riconosciuti come già importati e potrai pulire la scheda da qui.</div>`:`
+    <div class="tiles">
+      <div class="tile ok"><div class="k">Eliminati</div><div class="v">${nf.format(r.files)}</div><div class="d">Ognuno ricontrollato sul PC</div></div>
+      <div class="tile"><div class="k">Spazio liberato</div><div class="v">${fmtSize(r.mb)}</div><div class="d">Su EOS_DIGITAL</div></div>
+      <div class="tile"><div class="k">Restano</div><div class="v">${nf.format(leftFiles)}</div><div class="d">${fmtSize(cardUsed)} occupati</div></div>
+      <div class="tile"><div class="k">Spazio libero</div><div class="v">${fmtSize(CARD_MB-cardUsed)}</div><div class="d">di 64 GB</div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px"><h3>EOS_DIGITAL</h3><div class="mrow"><span>Ora</span><div class="meter"><i style="width:${f1(100*cardUsed/CARD_MB)}%"></i></div><span class="num">${fmtSize(cardUsed)} / 64 GB</span></div></div>
+    <div class="tip"><b>Prima del prossimo servizio</b> formatta la scheda dalla fotocamera: ricrea il file system e le cartelle che la fotocamera si aspetta. Il registro delle eliminazioni è in <span class="mono">${esc(state.dest)}\\.psi\\pulizia-2026-10-06.csv</span>.</div>`;
+  $('#k-actions').innerHTML=`<span class="sum">${skip?'':`<b>${nf.format(r.files)}</b> file eliminati · <b>${fmtSize(r.mb)}</b> liberati`}</span><button class="btn ghost" id="k-new">Nuova importazione</button><button class="btn" id="k-open">Apri cartella</button>${ejected?'<button class="btn" disabled>Scheda espulsa</button>':'<button class="btn primary" id="k-eject">Espelli EOS_DIGITAL</button>'}`;
+  $('#k-new').onclick=newImport;
+  $('#k-open').onclick=()=>toast('Apre '+state.dest+' nel file manager del sistema');
+  const ej=$('#k-eject');if(ej)ej.onclick=()=>{ejected=true;renderCard();toast('Puoi rimuovere EOS_DIGITAL in sicurezza');renderCleanDone()};
+}
+
+/* ---------- note UX ---------- */
+const NOTES={
+ 1:['Sorgente',[
+  '<b>Rilevamento automatico.</b> L\'app controlla i volumi montati (lettere di unità su Windows, /Volumes su macOS, /media e /run/media su Linux) e preseleziona la memoria appena collegata.',
+  '<b>Filtri ricordati.</b> Tipi di file e opzioni di scansione restano quelli dell\'ultima importazione.',
+  '<b>Solo novità.</b> Un indice locale di hash riconosce i file già importati: se reinserisci la stessa scheda vedi solo gli scatti nuovi.',
+  '<b>Scansione rapida.</b> Si leggono solo i metadati EXIF e le anteprime JPEG incorporate nei RAW, quindi anche una scheda da 128 GB si analizza in pochi secondi.']],
+ 2:['Sessioni di scatto',[
+  '<b>Una sola regola.</b> Una pausa più lunga della soglia apre una nuova sessione. Prova il cursore: a 1 h 30 min cerimonia e ricevimento si uniscono, a 30 min la sessione in studio si divide in due.',
+  '<b>Nomi che restano.</b> Il nome proposto deriva dall\'orario (Mattina, Pomeriggio, Sera). I nomi che scrivi vengono mantenuti anche se cambi la soglia.',
+  '<b>Percorso in tempo reale.</b> Sotto ogni nome compare la cartella finale. Caratteri non validi e nomi doppi vengono segnalati prima della copia, senza bloccare.',
+  '<b>Anteprima a destra.</b> Clic su una sessione per vedere scatti, obiettivi, ISO e la distribuzione degli scatti nel tempo.']],
+ 3:['Destinazione',[
+  '<b>Ciò che vedi è ciò che ottieni.</b> L\'albero mostra esattamente le cartelle e le sottocartelle che verranno create.',
+  '<b>Formati a scelta.</b> RAW + JPEG, solo RAW o solo JPEG, con o senza video. Conteggi, spazio e albero si aggiornano subito; in "Solo JPEG" gli scatti senza JPEG vengono segnalati. I formati non importati restano sulla scheda anche dopo la pulizia.',
+  '<b>La scheda non si tocca durante la copia.</b> La pulizia è un passaggio separato, dopo il report: qui scegli solo se proporla alla fine.',
+  '<b>Duplicati gestiti.</b> Di default i file identici vengono saltati; quelli con lo stesso nome ma contenuto diverso vengono rinominati, mai sovrascritti.']],
+ 4:['Copia e report',[
+  '<b>Copia sicura.</b> Ogni file viene scritto con un nome temporaneo e rinominato solo dopo la verifica: un\'interruzione non lascia file a metà.',
+  '<b>Errori non bloccanti.</b> Un file illeggibile viene saltato e registrato; a fine copia puoi riprovare solo quelli.',
+  '<b>Avanzamento leggibile.</b> Percentuale, velocità e tempo rimanente in alto; stato per sessione sotto (In attesa, In copia, Verifica, Verificata).',
+  '<b>Report.</b> Un CSV con esito file per file viene salvato nella destinazione ed è esportabile. Da qui si passa alla pulizia della scheda.']],
+ 5:['Pulizia scheda',[
+  '<b>Solo ciò che è al sicuro.</b> Si eliminano i file copiati e verificati in questa importazione, più quelli già presenti identici sul PC. Puoi escludere singole sessioni.',
+  '<b>Doppio controllo.</b> Subito prima di eliminare ogni file l\'app ricalcola l\'hash della copia sul PC. Se non coincide, il file resta sulla scheda.',
+  '<b>Niente sorprese.</b> Sessioni non importate, file con errori e cartelle di sistema della fotocamera restano. "Svuota tutta la scheda" si sblocca solo quando non resta nulla da importare: nell\'esempio la sessione del 4 ottobre non è stata importata, quindi è bloccata.',
+  '<b>Conferma esplicita.</b> Le schede SD non hanno cestino: il pulsante rosso si attiva solo dopo la spunta, e ogni eliminazione finisce in un registro CSV. Alla fine l\'app consiglia di formattare dalla fotocamera.']]
+};
+function renderNotes(){const [t,items]=NOTES[state.step];$('#notes-title').textContent=t;$('#notes').innerHTML=items.map(x=>`<li>${x}</li>`).join('');}
+
+/* ---------- navigazione ---------- */
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+function go(n){
+  state.step=n;
+  $$('.screen').forEach(el=>el.hidden=+el.dataset.step!==n);
+  $$('.step').forEach(b=>{const k=+b.dataset.go;b.classList.toggle('on',k===n);b.classList.toggle('done',k<n);if(k===n)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
+  if(n===2)renderSessions();
+  if(n===3)renderDest();
+  if(n===4){if(!state.copy)startCopy();}
+  if(n===5){if(!state.clean)state.clean={mode:'imported',sel:{},ack:false,running:false,done:false};renderClean();}
+  renderNotes();
+}
+$$('.step').forEach(b=>b.onclick=()=>{
+  const n=+b.dataset.go;
+  if(n===5&&!(state.copy&&state.copy.done)){toast('La pulizia è disponibile al termine della copia');return;}
+  go(n);
+});
+
+computeSessions();
+renderCard();
+const f0=photos[0].t,fl=photos[photos.length-1].t;
+$('#s2-sub').textContent=`${nf.format(TOTAL_FILES)} file letti da EOS_DIGITAL · scatti dal ${new Date(f0).toLocaleDateString('it-IT',{day:'numeric',month:'short'})} al ${new Date(fl).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'})}`;
+go(2);
+})();
+</script>

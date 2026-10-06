@@ -1,0 +1,222 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ImportaMI.App.ViewModels"
+             xmlns:res="using:ImportaMI.App.Resources"
+             x:Class="ImportaMI.App.Views.SessionsView"
+             x:DataType="vm:SessionsViewModel">
+
+    <UserControl.Resources>
+        <!-- Miniatura di uno scatto, usata nelle schede e nell'editor di divisione. -->
+        <DataTemplate x:Key="Thumb" x:DataType="vm:ThumbnailViewModel">
+            <Border Width="96" Height="64" CornerRadius="4" ClipToBounds="True"
+                    Background="{StaticResource RaisedBrush}" ToolTip.Tip="{Binding TimeText}">
+                <Panel>
+                    <LayoutTransformControl LayoutTransform="{Binding Rotation}" IsVisible="{Binding HasImage}">
+                        <Image Source="{Binding Image}" Stretch="UniformToFill" />
+                    </LayoutTransformControl>
+                    <PathIcon Width="18" Height="18" IsVisible="{Binding IsVideo}" Data="M8,5 V19 L19,12 Z" />
+                    <Border Classes="badge" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="3"
+                            IsVisible="{Binding Badge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock Text="{Binding Badge}" FontSize="9" FontWeight="SemiBold" />
+                    </Border>
+                </Panel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <!-- Intestazione con lo stato del controllo nell'archivio -->
+        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="24,18,24,14">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="title" Text="{x:Static res:Strings.SessionsTitle}" />
+                    <TextBlock Classes="muted" Text="{Binding Subtitle}" />
+                </StackPanel>
+                <Border Grid.Column="1" Classes="card" Padding="12,8" VerticalAlignment="Bottom" MaxWidth="460"
+                        IsVisible="{Binding ArchiveStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <ProgressBar IsIndeterminate="True" Width="60" MinWidth="0" IsVisible="{Binding IsCheckingArchive}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Classes="muted" Text="{Binding ArchiveStatus}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Barra delle azioni: lista oppure editor di divisione -->
+        <Border DockPanel.Dock="Bottom" Classes="actionbar">
+            <Panel>
+                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsListing}">
+                    <TextBlock Classes="muted" Text="{Binding Summary}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                        <Button Content="{x:Static res:Strings.Back}" Command="{Binding BackCommand}" />
+                        <Button Classes="accent" Content="{x:Static res:Strings.NextDestination}" Command="{Binding NextCommand}" />
+                    </StackPanel>
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsSplitting}">
+                    <TextBlock Classes="muted" Text="{Binding Splitter.CountText}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                        <Button Content="{x:Static res:Strings.Cancel}" Command="{Binding Splitter.CancelCommand}" />
+                        <Button Classes="accent" Content="{x:Static res:Strings.SplitApply}" Command="{Binding Splitter.ApplyCommand}" />
+                    </StackPanel>
+                </Grid>
+            </Panel>
+        </Border>
+
+        <Panel>
+            <!-- Lista delle sessioni -->
+            <ScrollViewer Padding="24,16" IsVisible="{Binding IsListing}">
+                <StackPanel Spacing="10" MaxWidth="980" HorizontalAlignment="Left">
+                    <TextBlock Classes="muted" Text="{x:Static res:Strings.SessionsHint}" TextWrapping="Wrap" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Classes="muted" Text="{Binding CountText}" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <Button Classes="subtle" Content="{x:Static res:Strings.SelectAll}" Command="{Binding SelectAllCommand}" />
+                            <Button Classes="subtle" Content="{x:Static res:Strings.SelectNone}" Command="{Binding SelectNoneCommand}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding Sessions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="10" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SessionItemViewModel">
+                                <Border Classes="card session" Classes.off="{Binding !IsSelected}">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Top" Margin="0,0,8,0" />
+                                        <StackPanel Grid.Column="1" Spacing="8">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Orientation="Horizontal" Spacing="14">
+                                                    <TextBlock Text="{Binding DateText}" FontWeight="SemiBold" />
+                                                    <TextBlock Classes="mono muted" Text="{Binding TimeRange}" VerticalAlignment="Center" />
+                                                    <TextBlock Classes="muted" Text="{Binding DurationText}" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                                    <Button Classes="subtle small" Content="{x:Static res:Strings.SplitButton}" Command="{Binding SplitCommand}" IsVisible="{Binding CanSplit}" />
+                                                    <Button Classes="subtle small" Content="{x:Static res:Strings.MergeButton}" Command="{Binding MergeCommand}" IsVisible="{Binding CanMerge}" />
+                                                </StackPanel>
+                                            </Grid>
+                                            <TextBox Text="{Binding Name}" PlaceholderText="{x:Static res:Strings.SessionNamePlaceholder}"
+                                                     FontSize="15" FontWeight="SemiBold" />
+                                            <WrapPanel>
+                                                <TextBlock Classes="mono faint" Text="{Binding FolderPreview}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                                <Border Classes="chip" Background="#24E8C450" IsVisible="{Binding HasWarning}">
+                                                    <TextBlock Text="{Binding Warning}" FontSize="11" Foreground="{StaticResource WarnBrush}" />
+                                                </Border>
+                                            </WrapPanel>
+                                            <ItemsControl ItemsSource="{Binding Thumbnails}" ItemTemplate="{StaticResource Thumb}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" Spacing="4" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                            <WrapPanel>
+                                                <Border Classes="chip" Margin="0,0,6,0"><TextBlock Classes="mono muted" Text="{Binding PhotosText}" /></Border>
+                                                <Border Classes="chip" Margin="0,0,6,0" IsVisible="{Binding VideosText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                    <TextBlock Classes="mono muted" Text="{Binding VideosText}" />
+                                                </Border>
+                                                <Border Classes="chip" Margin="0,0,6,0"><TextBlock Classes="mono muted" Text="{Binding FilesText}" /></Border>
+                                                <Border Classes="chip" Margin="0,0,6,0"><TextBlock Classes="mono muted" Text="{Binding SizeText}" /></Border>
+                                                <Border Classes="chip" Margin="0,0,6,0" Background="#24E8C450" IsVisible="{Binding FileDatesText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                    <TextBlock Text="{Binding FileDatesText}" FontSize="11" Foreground="{StaticResource WarnBrush}" />
+                                                </Border>
+                                                <Border Classes="chip archive" Classes.full="{Binding IsFullyArchived}" IsVisible="{Binding HasArchiveText}" ToolTip.Tip="{Binding ArchiveFolders}">
+                                                    <TextBlock Text="{Binding ArchiveText}" FontSize="11" />
+                                                </Border>
+                                            </WrapPanel>
+                                            <TextBlock Classes="mono faint" FontSize="11" Text="{Binding ArchiveFolders}" IsVisible="{Binding HasArchiveText}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Avvisi della scansione: non bloccano, ma l'utente deve poterli vedere -->
+                    <Expander Header="{Binding IssuesHeader}" IsVisible="{Binding HasIssues}" HorizontalAlignment="Stretch" Margin="0,8,0,0">
+                        <ItemsControl ItemsSource="{Binding Issues}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:IssueItem">
+                                    <Grid ColumnDefinitions="260,*" Margin="0,3">
+                                        <TextBlock Classes="mono" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Folder}" />
+                                        <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Message}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Editor di divisione: tutte le foto della sessione, si clicca dove inizia la nuova -->
+            <ScrollViewer Padding="24,16" IsVisible="{Binding IsSplitting}">
+                <StackPanel Spacing="12">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding Splitter.Title}" FontSize="17" FontWeight="SemiBold" />
+                        <TextBlock Classes="muted" Text="{x:Static res:Strings.SplitHint}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Splitter.Tiles}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SplitTileViewModel">
+                                <Button Classes="tile" Classes.start="{Binding IsStart}" Classes.first="{Binding IsFirst}"
+                                        Command="{Binding ToggleCommand}" Margin="0,0,8,8" Padding="4">
+                                    <StackPanel Spacing="4">
+                                        <ContentControl Content="{Binding Thumbnail}" ContentTemplate="{StaticResource Thumb}" />
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Classes="mono muted" FontSize="11" Text="{Binding Thumbnail.TimeText}" />
+                                            <TextBlock Grid.Column="1" Classes="marker" FontSize="10" FontWeight="SemiBold"
+                                                       Text="{x:Static res:Strings.NewSessionHere}" IsVisible="{Binding IsStart}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Panel>
+    </DockPanel>
+
+    <UserControl.Styles>
+        <Style Selector="Border.session.off">
+            <Setter Property="Opacity" Value="0.5" />
+        </Style>
+        <Style Selector="Button.small">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="8,3" />
+        </Style>
+        <Style Selector="Border.chip.archive">
+            <Setter Property="Background" Value="#24E8C450" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource WarnBrush}" />
+        </Style>
+        <Style Selector="Border.chip.archive.full">
+            <Setter Property="Background" Value="#245FC48D" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource OkBrush}" />
+        </Style>
+        <Style Selector="Button.tile">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+        <Style Selector="Button.tile.start">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        </Style>
+        <Style Selector="Button.tile.start /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        </Style>
+        <Style Selector="Button.tile.first">
+            <Setter Property="Opacity" Value="0.6" />
+        </Style>
+        <Style Selector="TextBlock.marker">
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+        </Style>
+    </UserControl.Styles>
+</UserControl>

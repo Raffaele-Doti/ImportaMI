@@ -1,0 +1,136 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ImportaMI.App.ViewModels"
+             xmlns:res="using:ImportaMI.App.Resources"
+             x:Class="ImportaMI.App.Views.DestinationView"
+             x:DataType="vm:DestinationViewModel">
+
+    <UserControl.Resources>
+        <!-- Opzione a scelta singola: titolo e, se c'è, una riga di spiegazione. -->
+        <DataTemplate x:Key="ChoiceItem" x:DataType="vm:Choice">
+            <RadioButton GroupName="{Binding Group}" IsChecked="{Binding IsSelected}" Margin="0,2">
+                <StackPanel Spacing="1">
+                    <TextBlock Text="{Binding Title}" />
+                    <TextBlock Classes="muted" FontSize="12" Text="{Binding Detail}" TextWrapping="Wrap" IsVisible="{Binding HasDetail}" />
+                </StackPanel>
+            </RadioButton>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="24,18,24,14">
+            <StackPanel Spacing="4">
+                <TextBlock Classes="title" Text="{x:Static res:Strings.DestTitle}" />
+                <TextBlock Classes="muted" Text="{x:Static res:Strings.DestSubtitle}" />
+            </StackPanel>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom" Classes="actionbar">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="muted" Text="{Binding Summary}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                    <Button Content="{x:Static res:Strings.Back}" Command="{Binding BackCommand}" />
+                    <Button Classes="accent" Content="{x:Static res:Strings.StartCopy}" Command="{Binding StartCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid ColumnDefinitions="*,*">
+            <!-- Opzioni -->
+            <ScrollViewer Padding="24,18,16,24">
+                <StackPanel Spacing="22">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="label" Text="{x:Static res:Strings.DestFolderLabel}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Text="{Binding DestinationPath}" FontFamily="{StaticResource MonoFont}" />
+                            <Button Grid.Column="1" Margin="8,0,0,0" Content="{x:Static res:Strings.DestBrowse}" Command="{Binding BrowseCommand}" />
+                        </Grid>
+                        <Border Classes="notice error" IsVisible="{Binding HasError}">
+                            <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
+                        </Border>
+                        <TextBlock Classes="muted" FontSize="12" Text="{Binding Note}" TextWrapping="Wrap" IsVisible="{Binding HasNote}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="label" Text="{x:Static res:Strings.DestFormats}" />
+                        <ItemsControl ItemsSource="{Binding Formats.Options}" ItemTemplate="{StaticResource ChoiceItem}" />
+                        <CheckBox IsChecked="{Binding IncludeVideos}" Content="{x:Static res:Strings.IncludeVideos}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="label" Text="{x:Static res:Strings.DestSubfolders}" />
+                        <ItemsControl ItemsSource="{Binding Subfolders.Options}" ItemTemplate="{StaticResource ChoiceItem}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="label" Text="{x:Static res:Strings.DestLayout}" />
+                        <ItemsControl ItemsSource="{Binding Layouts.Options}" ItemTemplate="{StaticResource ChoiceItem}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="label" Text="{x:Static res:Strings.DestDuplicates}" />
+                        <ItemsControl ItemsSource="{Binding Duplicates.Options}" ItemTemplate="{StaticResource ChoiceItem}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="label" Text="{x:Static res:Strings.DestOptions}" />
+                        <CheckBox IsChecked="{Binding SkipArchiveDuplicates}">
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="{x:Static res:Strings.OptSkipArchive}" />
+                                <TextBlock Classes="muted" FontSize="12" Text="{x:Static res:Strings.OptSkipArchiveDetail}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding Verify}">
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="{x:Static res:Strings.OptVerify}" />
+                                <TextBlock Classes="muted" FontSize="12" Text="{x:Static res:Strings.OptVerifyDetail}" />
+                            </StackPanel>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding ProposeCleanup}">
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="{x:Static res:Strings.OptCleanup}" />
+                                <TextBlock Classes="muted" FontSize="12" Text="{x:Static res:Strings.OptCleanupDetail}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding EjectWhenDone}" Content="{x:Static res:Strings.OptEject}" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Anteprima su disco e spazio -->
+            <ScrollViewer Grid.Column="1" Padding="16,18,24,24">
+                <StackPanel Spacing="12">
+                    <Border Classes="card">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="{x:Static res:Strings.DestPreview}" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Classes="mono muted" Text="{Binding FoldersText}" />
+                            </Grid>
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                <SelectableTextBlock Text="{Binding TreeText}" FontFamily="{StaticResource MonoFont}" FontSize="12" LineHeight="20" />
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" IsVisible="{Binding SpaceText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{Binding SpaceTitle}" FontWeight="SemiBold" />
+                            <Panel Height="10">
+                                <ProgressBar Classes="needed" Value="{Binding NeededPercent}" Maximum="100" Height="10" MinHeight="10" MinWidth="0" />
+                                <ProgressBar Classes="used" Value="{Binding UsedPercent}" Maximum="100" Height="10" MinHeight="10" MinWidth="0" Background="Transparent" />
+                            </Panel>
+                            <TextBlock Classes="muted" Text="{Binding SpaceText}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </DockPanel>
+
+    <UserControl.Styles>
+        <!-- Barra a due colori: grigio per lo spazio occupato, ambra per quello che servirà. -->
+        <Style Selector="ProgressBar.used">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+        </Style>
+    </UserControl.Styles>
+</UserControl>

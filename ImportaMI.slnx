@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ImportaMI.App/ImportaMI.App.csproj" />
+    <Project Path="src/ImportaMI.Core/ImportaMI.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ImportaMI.App.Tests/ImportaMI.App.Tests.csproj" />
+    <Project Path="tests/ImportaMI.Core.Tests/ImportaMI.Core.Tests.csproj" />
+  </Folder>
+</Solution>

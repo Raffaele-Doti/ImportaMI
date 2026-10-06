@@ -1,0 +1,149 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ImportaMI.App.ViewModels"
+             xmlns:res="using:ImportaMI.App.Resources"
+             x:Class="ImportaMI.App.Views.CleanupView"
+             x:DataType="vm:CleanupViewModel">
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="StayTemplate" x:DataType="vm:StayItem">
+            <StackPanel Margin="0,4">
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                <TextBlock Classes="muted" FontSize="12" Text="{Binding Detail}" TextWrapping="Wrap" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="24,18,24,14">
+            <StackPanel Spacing="4">
+                <TextBlock Classes="title" Text="{Binding Title}" />
+                <TextBlock Classes="muted" Text="{Binding Subtitle}" />
+            </StackPanel>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom" Classes="actionbar">
+            <Panel>
+                <!-- Prima: conferma esplicita, perché le schede non hanno cestino -->
+                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsSetup}">
+                    <CheckBox IsChecked="{Binding Acknowledged}" Content="{x:Static res:Strings.CleanAck}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                        <Button Content="{x:Static res:Strings.CleanSkip}" Command="{Binding SkipCommand}" />
+                        <Button Classes="danger" Content="{Binding DeleteLabel}" Command="{Binding DeleteCommand}" />
+                    </StackPanel>
+                </Grid>
+                <Button Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelCleanupCommand}" HorizontalAlignment="Right" IsVisible="{Binding IsRunning}" />
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" IsVisible="{Binding IsDone}">
+                    <Button Classes="subtle" Content="{x:Static res:Strings.NewImport}" Command="{Binding NewImportCommand}" />
+                    <Button Content="{x:Static res:Strings.OpenFolder}" Command="{Binding OpenFolderCommand}" />
+                    <Button Classes="accent" Content="{x:Static res:Strings.EjectButton}" Command="{Binding EjectCommand}" IsVisible="{Binding CanEject}" />
+                </StackPanel>
+            </Panel>
+        </Border>
+
+        <ScrollViewer Padding="24,20">
+            <StackPanel MaxWidth="1000" HorizontalAlignment="Left" Spacing="16">
+
+                <!-- Scelta -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="20" IsVisible="{Binding IsSetup}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Classes="label" Text="{x:Static res:Strings.CleanSessions}" />
+                        <ItemsControl ItemsSource="{Binding Sessions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:CleanupSessionRow">
+                                    <Border Classes="card" Padding="12,10" Margin="0,0,0,6">
+                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Margin="4,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock FontSize="12" Foreground="{StaticResource WarnBrush}" Text="{Binding NotCopiedText}" IsVisible="{Binding HasNotCopied}" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Classes="mono muted" Text="{Binding FilesText}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="12">
+                        <Border Classes="card" IsVisible="{Binding HasSpace}">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="110,*,Auto" ColumnSpacing="10">
+                                    <TextBlock Classes="muted" Text="{x:Static res:Strings.CleanSpaceNow}" />
+                                    <ProgressBar Grid.Column="1" Value="{Binding NowPercent}" Maximum="100" Height="8" MinHeight="8" MinWidth="0" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" />
+                                    <TextBlock Grid.Column="2" Classes="mono" Text="{Binding NowText}" />
+                                </Grid>
+                                <Grid ColumnDefinitions="110,*,Auto" ColumnSpacing="10">
+                                    <TextBlock Classes="muted" Text="{x:Static res:Strings.CleanSpaceAfter}" />
+                                    <ProgressBar Grid.Column="1" Value="{Binding AfterPercent}" Maximum="100" Height="8" MinHeight="8" MinWidth="0" VerticalAlignment="Center" Foreground="{StaticResource OkBrush}" />
+                                    <TextBlock Grid.Column="2" Classes="mono" Text="{Binding AfterText}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="card">
+                            <StackPanel Spacing="4">
+                                <TextBlock Classes="label" Text="{x:Static res:Strings.CleanStays}" />
+                                <ItemsControl ItemsSource="{Binding Stays}" ItemTemplate="{StaticResource StayTemplate}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="card">
+                            <TextBlock Classes="muted" Text="{x:Static res:Strings.CleanCheck}" TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- In corso -->
+                <StackPanel Spacing="10" IsVisible="{Binding IsRunning}">
+                    <ProgressBar Value="{Binding Percent}" Maximum="100" Height="10" MinHeight="10" MinWidth="0" />
+                    <TextBlock Classes="mono muted" Text="{Binding ProgressText}" />
+                    <TextBlock Classes="mono faint" Text="{Binding CurrentFile}" />
+                </StackPanel>
+
+                <!-- Esito -->
+                <StackPanel Spacing="12" IsVisible="{Binding IsDone}">
+                    <Border Classes="notice" IsVisible="{Binding HasDoneMessage}">
+                        <TextBlock Text="{Binding DoneMessage}" TextWrapping="Wrap" />
+                    </Border>
+                    <Border Classes="notice" IsVisible="{Binding HasEjectMessage}" BorderBrush="{StaticResource OkBrush}">
+                        <TextBlock Text="{Binding EjectMessage}" TextWrapping="Wrap" />
+                    </Border>
+                    <WrapPanel IsVisible="{Binding ShowTiles}">
+                        <Border Classes="tile" Width="236">
+                            <StackPanel>
+                                <TextBlock Classes="label" Text="{x:Static res:Strings.TileDeleted}" />
+                                <TextBlock Classes="tilevalue" Foreground="{StaticResource OkBrush}" Text="{Binding DeletedValue}" />
+                                <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{x:Static res:Strings.TileDeletedDetail}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="tile" Width="236">
+                            <StackPanel>
+                                <TextBlock Classes="label" Text="{x:Static res:Strings.TileFreed}" />
+                                <TextBlock Classes="tilevalue" Text="{Binding FreedValue}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="tile" Width="236">
+                            <StackPanel>
+                                <TextBlock Classes="label" Text="{x:Static res:Strings.TileKept}" />
+                                <TextBlock Classes="tilevalue" Text="{Binding KeptValue}" />
+                                <TextBlock Classes="muted" FontSize="12" Text="{Binding KeptDetail}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="tile" Width="236">
+                            <StackPanel>
+                                <TextBlock Classes="label" Text="{x:Static res:Strings.TileFreeNow}" />
+                                <TextBlock Classes="tilevalue" Text="{Binding FreeNowValue}" />
+                            </StackPanel>
+                        </Border>
+                    </WrapPanel>
+                    <Border Classes="card" IsVisible="{Binding HasKept}">
+                        <ItemsControl ItemsSource="{Binding Kept}" ItemTemplate="{StaticResource StayTemplate}" />
+                    </Border>
+                    <Border Classes="card">
+                        <TextBlock Classes="muted" Text="{x:Static res:Strings.FormatTip}" TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

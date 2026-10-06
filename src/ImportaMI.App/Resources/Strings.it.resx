@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Testi dell'interfaccia in italiano. Ogni chiave deve esistere anche in Strings.resx. -->
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Passaggi -->
+  <data name="StepSource" xml:space="preserve"><value>Sorgente</value></data>
+  <data name="StepSessions" xml:space="preserve"><value>Sessioni</value></data>
+  <data name="StepDestination" xml:space="preserve"><value>Destinazione</value></data>
+  <data name="StepCopy" xml:space="preserve"><value>Copia e report</value></data>
+  <data name="StepCleanup" xml:space="preserve"><value>Pulizia scheda</value></data>
+
+  <!-- Comandi comuni -->
+  <data name="Back" xml:space="preserve"><value>Indietro</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Annulla</value></data>
+
+  <!-- 1 · Sorgente -->
+  <data name="SourceTitle" xml:space="preserve"><value>Da dove importare?</value></data>
+  <data name="SourceSubtitle" xml:space="preserve"><value>Schede e dischi esterni compaiono qui appena li colleghi.</value></data>
+  <data name="SourceNoDrives" xml:space="preserve"><value>Nessuna scheda o disco esterno collegato. Collegane uno, oppure scegli una cartella.</value></data>
+  <data name="SourceRemovable" xml:space="preserve"><value>Unità rimovibile</value></data>
+  <data name="SourceDrive" xml:space="preserve"><value>Disco</value></data>
+  <data name="SourceFolder" xml:space="preserve"><value>Cartella</value></data>
+  <data name="SourceSpace" xml:space="preserve"><value>{0} usati su {1}</value></data>
+  <data name="SourceNew" xml:space="preserve"><value>Appena collegata</value></data>
+  <data name="BrowseFolder" xml:space="preserve"><value>Scegli una cartella…</value></data>
+  <data name="FolderPickerTitle" xml:space="preserve"><value>Scegli la cartella da cui importare</value></data>
+  <data name="Scan" xml:space="preserve"><value>Scansiona</value></data>
+  <data name="ScanProgress" xml:space="preserve"><value>{0} file controllati, {1} foto e video trovati</value></data>
+  <data name="ScanNothingFoundTitle" xml:space="preserve"><value>Qui non ci sono foto né video</value></data>
+  <data name="ScanNothingFoundDetail" xml:space="preserve"><value>{0} contiene {1} altri file (documenti, musica, file della fotocamera…) ma nessuna foto o video da importare.</value></data>
+  <data name="ScanEmptySourceDetail" xml:space="preserve"><value>{0} è vuota.</value></data>
+  <data name="ScanSourceGoneTitle" xml:space="preserve"><value>La sorgente non è più disponibile</value></data>
+  <data name="ScanSourceGoneDetail" xml:space="preserve"><value>Non riesco a leggere {0}. È stata scollegata?</value></data>
+  <data name="ScanCanceled" xml:space="preserve"><value>Scansione annullata.</value></data>
+  <data name="ScanFailedTitle" xml:space="preserve"><value>La scansione si è interrotta</value></data>
+  <data name="ScanFailedDetail" xml:space="preserve"><value>Errore imprevisto: {0}</value></data>
+
+  <!-- 2 · Sessioni -->
+  <data name="SessionsTitle" xml:space="preserve"><value>Sessioni di scatto</value></data>
+  <data name="SessionsSubtitle" xml:space="preserve"><value>{0} file letti da {1}</value></data>
+  <data name="SessionsCount" xml:space="preserve"><value>{0} sessioni trovate</value></data>
+  <data name="SessionsSummary" xml:space="preserve"><value>{0} di {1} sessioni · {2} file · {3}</value></data>
+  <data name="SessionsHint" xml:space="preserve"><value>All'inizio una sessione per giorno. Dividi un giorno quando contiene servizi diversi (un matrimonio, poi un carnevale), oppure unisci le sessioni che vanno insieme.</value></data>
+  <data name="SplitButton" xml:space="preserve"><value>Dividi…</value></data>
+  <data name="MergeButton" xml:space="preserve"><value>Unisci alla precedente</value></data>
+  <data name="SplitTitle" xml:space="preserve"><value>Dividi «{0}»</value></data>
+  <data name="SplitHint" xml:space="preserve"><value>Clicca la foto da cui inizia una nuova sessione. Puoi sceglierne più di una; clicca di nuovo per annullare.</value></data>
+  <data name="SplitCount" xml:space="preserve"><value>Diventerà {0} sessioni</value></data>
+  <data name="SplitApply" xml:space="preserve"><value>Dividi</value></data>
+  <data name="NewSessionHere" xml:space="preserve"><value>Nuova sessione</value></data>
+  <data name="ArchiveChecking" xml:space="preserve"><value>Cerco queste foto in {0}…</value></data>
+  <data name="ArchiveIndexing" xml:space="preserve"><value>Lettura dell'archivio: {0} file…</value></data>
+  <data name="ArchiveComparing" xml:space="preserve"><value>Confronto con l'archivio: {0} di {1}…</value></data>
+  <data name="ArchiveNone" xml:space="preserve"><value>Nessuna di queste foto è già in {0}.</value></data>
+  <data name="ArchiveFound" xml:space="preserve"><value>{0} scatti sono già in {1}. Le sessioni già importate sono state deselezionate.</value></data>
+  <data name="ArchiveFailed" xml:space="preserve"><value>Non è stato possibile controllare l'archivio: {0}</value></data>
+  <data name="ArchiveAll" xml:space="preserve"><value>Già nel tuo archivio</value></data>
+  <data name="ArchiveSome" xml:space="preserve"><value>{0} di {1} scatti già nel tuo archivio</value></data>
+  <data name="ArchiveWhere" xml:space="preserve"><value>in {0}</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Seleziona tutte</value></data>
+  <data name="SelectNone" xml:space="preserve"><value>Nessuna</value></data>
+  <data name="SessionNamePlaceholder" xml:space="preserve"><value>Dai un nome alla sessione, es. Matrimonio Bianchi (senza nome la cartella avrà solo la data)</value></data>
+  <data name="SessionPhotos" xml:space="preserve"><value>{0} foto</value></data>
+  <data name="SessionVideos" xml:space="preserve"><value>{0} video</value></data>
+  <data name="SessionFiles" xml:space="preserve"><value>{0} file</value></data>
+  <data name="SessionFileDates" xml:space="preserve"><value>Datati con la data del file: {0}</value></data>
+  <data name="WarningInvalidChars" xml:space="preserve"><value>Caratteri non ammessi nei nomi di cartella sostituiti con _</value></data>
+  <data name="WarningDuplicate" xml:space="preserve"><value>Stessa cartella di un'altra sessione: i file verranno uniti</value></data>
+  <data name="NextDestination" xml:space="preserve"><value>Avanti: destinazione</value></data>
+  <data name="IssuesHeader" xml:space="preserve"><value>{0} avvisi dalla scansione</value></data>
+  <data name="IssueFolderNotAccessible" xml:space="preserve"><value>Cartella non accessibile, saltata</value></data>
+  <data name="IssueFileNotReadable" xml:space="preserve"><value>File illeggibile, saltato</value></data>
+  <data name="IssueEmptyFile" xml:space="preserve"><value>File vuoto (0 byte), saltato</value></data>
+  <data name="IssueNoCaptureTime" xml:space="preserve"><value>Orario di scatto assente: usata la data del file</value></data>
+  <data name="IssueMetadataUnreadable" xml:space="preserve"><value>Metadati illeggibili: usata la data del file</value></data>
+
+  <!-- Comandi delle schermate finali -->
+  <data name="Pause" xml:space="preserve"><value>Pausa</value></data>
+  <data name="Resume" xml:space="preserve"><value>Riprendi</value></data>
+  <data name="OpenFolder" xml:space="preserve"><value>Apri cartella</value></data>
+  <data name="OpenReport" xml:space="preserve"><value>Apri report</value></data>
+  <data name="NewImport" xml:space="preserve"><value>Nuova importazione</value></data>
+  <data name="EjectButton" xml:space="preserve"><value>Espelli scheda</value></data>
+  <data name="Ejected" xml:space="preserve"><value>{0} è stata espulsa: puoi rimuoverla.</value></data>
+  <data name="EjectFailed" xml:space="preserve"><value>Non riesco a espellere {0}. Chiudi eventuali file aperti ed espellila dal sistema.</value></data>
+
+  <!-- 3 · Destinazione -->
+  <data name="DestTitle" xml:space="preserve"><value>Dove salvare le sessioni?</value></data>
+  <data name="DestSubtitle" xml:space="preserve"><value>L'anteprima a destra è esattamente ciò che verrà creato sul disco.</value></data>
+  <data name="DestFolderLabel" xml:space="preserve"><value>CARTELLA DI DESTINAZIONE</value></data>
+  <data name="DestBrowse" xml:space="preserve"><value>Sfoglia…</value></data>
+  <data name="DestPickerTitle" xml:space="preserve"><value>Scegli dove salvare le foto</value></data>
+  <data name="DestFormats" xml:space="preserve"><value>FORMATI DA IMPORTARE</value></data>
+  <data name="FormatRawAndJpegDetail" xml:space="preserve"><value>Tutti i file di ogni scatto</value></data>
+  <data name="FormatRawOnlyDetail" xml:space="preserve"><value>I JPEG restano sulla scheda</value></data>
+  <data name="FormatJpegOnlyDetail" xml:space="preserve"><value>Più leggero da archiviare; i RAW restano sulla scheda</value></data>
+  <data name="IncludeVideos" xml:space="preserve"><value>Includi i video (MP4, MOV)</value></data>
+  <data name="DestSubfolders" xml:space="preserve"><value>DENTRO OGNI SESSIONE</value></data>
+  <data name="DestLayout" xml:space="preserve"><value>STRUTTURA CARTELLE</value></data>
+  <data name="LayoutDateAndName" xml:space="preserve"><value>Data e nome</value></data>
+  <data name="LayoutYear" xml:space="preserve"><value>Anno › data e nome</value></data>
+  <data name="LayoutYearMonth" xml:space="preserve"><value>Anno › mese › data e nome</value></data>
+  <data name="DestDuplicates" xml:space="preserve"><value>SE UN FILE ESISTE GIÀ</value></data>
+  <data name="DupSkip" xml:space="preserve"><value>Salta se identico</value></data>
+  <data name="DupSkipDetail" xml:space="preserve"><value>Confronto del contenuto; un file diverso con lo stesso nome viene rinominato</value></data>
+  <data name="DupRename" xml:space="preserve"><value>Rinomina sempre</value></data>
+  <data name="DupRenameDetail" xml:space="preserve"><value>IMG_4012.CR3 → IMG_4012 (1).CR3</value></data>
+  <data name="DupOverwrite" xml:space="preserve"><value>Sovrascrivi</value></data>
+  <data name="DupOverwriteDetail" xml:space="preserve"><value>Il file esistente viene sostituito quando la nuova copia è completa e verificata</value></data>
+  <data name="DestOptions" xml:space="preserve"><value>OPZIONI</value></data>
+  <data name="OptSkipArchive" xml:space="preserve"><value>Salta le foto già presenti nell'archivio</value></data>
+  <data name="OptSkipArchiveDetail" xml:space="preserve"><value>Anche se sono in un'altra cartella: confronto del contenuto, mai solo del nome</value></data>
+  <data name="DestArchiveNote" xml:space="preserve"><value>{0} file sono già nell'archivio e verranno saltati.</value></data>
+  <data name="SourceRemainingTitle" xml:space="preserve"><value>Su {0} restano {1} file di foto e video</value></data>
+  <data name="SourceRemainingDetail" xml:space="preserve"><value>Scansionala di nuovo per vedere quali non sono ancora nel tuo archivio: quelli già importati vengono riconosciuti e deselezionati.</value></data>
+  <data name="OptVerify" xml:space="preserve"><value>Verifica ogni file dopo la copia</value></data>
+  <data name="OptVerifyDetail" xml:space="preserve"><value>Checksum xxHash64 tra scheda e destinazione</value></data>
+  <data name="OptCleanup" xml:space="preserve"><value>Al termine proponi la pulizia della scheda</value></data>
+  <data name="OptCleanupDetail" xml:space="preserve"><value>Si eliminano solo i file copiati e verificati, e solo dopo la tua conferma</value></data>
+  <data name="OptEject" xml:space="preserve"><value>Espelli la scheda alla fine</value></data>
+  <data name="DestPreview" xml:space="preserve"><value>Anteprima su disco</value></data>
+  <data name="DestFolders" xml:space="preserve"><value>{0} cartelle</value></data>
+  <data name="DestSpace" xml:space="preserve"><value>Spazio su {0}</value></data>
+  <data name="DestSpaceDetail" xml:space="preserve"><value>{0} richiesti · {1} liberi su {2}</value></data>
+  <data name="DestEmpty" xml:space="preserve"><value>Scegli dove salvare le foto.</value></data>
+  <data name="DestNotAbsolute" xml:space="preserve"><value>Inserisci il percorso completo di una cartella.</value></data>
+  <data name="DestInvalid" xml:space="preserve"><value>Questo non è un percorso di cartella valido.</value></data>
+  <data name="DestOnSource" xml:space="preserve"><value>La destinazione è sulla scheda da cui stai importando. Scegli una cartella sul computer o su un altro disco.</value></data>
+  <data name="DestDriveMissing" xml:space="preserve"><value>L'unità {0} non è disponibile.</value></data>
+  <data name="DestNoSpace" xml:space="preserve"><value>Spazio insufficiente: servono {0}, liberi {1}.</value></data>
+  <data name="DestWillCreate" xml:space="preserve"><value>La cartella non esiste ancora: verrà creata.</value></data>
+  <data name="DestJpegOnlyNote" xml:space="preserve"><value>{0} scatti non hanno il JPEG e non verranno importati.</value></data>
+  <data name="DestLeftOnCard" xml:space="preserve"><value>{0} file delle sessioni scelte restano sulla scheda per i formati che hai scelto.</value></data>
+  <data name="DestSummary" xml:space="preserve"><value>{0} sessioni · {1} file · {2}</value></data>
+  <data name="StartCopy" xml:space="preserve"><value>Avvia copia</value></data>
+
+  <!-- 4 · Copia e report -->
+  <data name="CopyTitle" xml:space="preserve"><value>Copia in corso</value></data>
+  <data name="CopySubtitle" xml:space="preserve"><value>Da {0} a {1}</value></data>
+  <data name="CopyStats" xml:space="preserve"><value>{0} di {1} · {2}/s · {3} rimanenti</value></data>
+  <data name="CopyPaused" xml:space="preserve"><value>In pausa</value></data>
+  <data name="CopyVerifying" xml:space="preserve"><value>Verifica di {0}</value></data>
+  <data name="CopySessions" xml:space="preserve"><value>SESSIONI</value></data>
+  <data name="StatusWaiting" xml:space="preserve"><value>In attesa</value></data>
+  <data name="StatusCopying" xml:space="preserve"><value>In copia</value></data>
+  <data name="StatusDone" xml:space="preserve"><value>Completata</value></data>
+  <data name="StatusVerified" xml:space="preserve"><value>Verificata</value></data>
+  <data name="StatusErrors" xml:space="preserve"><value>Con errori</value></data>
+  <data name="StatusStopped" xml:space="preserve"><value>Interrotta</value></data>
+  <data name="SessionResult" xml:space="preserve"><value>{0} copiati · {1} già presenti · {2} non copiati</value></data>
+  <data name="ReportDoneTitle" xml:space="preserve"><value>Importazione completata</value></data>
+  <data name="ReportStoppedTitle" xml:space="preserve"><value>Importazione interrotta</value></data>
+  <data name="TileCopied" xml:space="preserve"><value>COPIATI</value></data>
+  <data name="TileVerified" xml:space="preserve"><value>tutti verificati</value></data>
+  <data name="TileSkipped" xml:space="preserve"><value>GIÀ PRESENTI</value></data>
+  <data name="TileSkippedDetail" xml:space="preserve"><value>Saltati perché identici</value></data>
+  <data name="TileFailed" xml:space="preserve"><value>NON COPIATI</value></data>
+  <data name="TileFailedDetail" xml:space="preserve"><value>Elencati sotto, si possono riprovare</value></data>
+  <data name="TileDuration" xml:space="preserve"><value>DURATA</value></data>
+  <data name="TileSpeed" xml:space="preserve"><value>Media {0}/s</value></data>
+  <data name="StopCanceled" xml:space="preserve"><value>Hai interrotto la copia. I file già copiati sono completi; non è rimasto nulla scritto a metà.</value></data>
+  <data name="StopSourceDisconnected" xml:space="preserve"><value>La scheda è stata scollegata. Ricollegala e scegli Riprova per copiare il resto.</value></data>
+  <data name="StopDestinationFull" xml:space="preserve"><value>La destinazione è piena. Libera un po' di spazio e scegli Riprova.</value></data>
+  <data name="StopDestinationUnavailable" xml:space="preserve"><value>La destinazione non è più disponibile. Ricollegala e scegli Riprova.</value></data>
+  <data name="FailuresHeader" xml:space="preserve"><value>File non copiati</value></data>
+  <data name="FailureReadOrWrite" xml:space="preserve"><value>Errore di lettura o scrittura</value></data>
+  <data name="FailureVerification" xml:space="preserve"><value>La copia non corrisponde all'originale</value></data>
+  <data name="FailureSourceMissing" xml:space="preserve"><value>Il file non è più sulla scheda</value></data>
+  <data name="RetryFiles" xml:space="preserve"><value>Riprova {0} file</value></data>
+  <data name="ReportSaved" xml:space="preserve"><value>Report salvato in {0}</value></data>
+  <data name="GoToCleanup" xml:space="preserve"><value>Avanti: pulisci la scheda</value></data>
+
+  <!-- 5 · Pulizia della scheda -->
+  <data name="CleanTitle" xml:space="preserve"><value>Pulizia della scheda</value></data>
+  <data name="CleanSubtitle" xml:space="preserve"><value>Libera spazio su {0} eliminando solo ciò che è già al sicuro sul computer.</value></data>
+  <data name="CleanSessions" xml:space="preserve"><value>SESSIONI DA ELIMINARE DALLA SCHEDA</value></data>
+  <data name="CleanSessionFiles" xml:space="preserve"><value>{0} file · {1}</value></data>
+  <data name="CleanSessionFailed" xml:space="preserve"><value>{0} non copiati, restano sulla scheda</value></data>
+  <data name="CleanStays" xml:space="preserve"><value>RESTA SULLA SCHEDA</value></data>
+  <data name="CleanStayNotImported" xml:space="preserve"><value>{0} file non importati</value></data>
+  <data name="CleanStayNotImportedDetail" xml:space="preserve"><value>Sessioni o formati che non hai scelto</value></data>
+  <data name="CleanStayFailed" xml:space="preserve"><value>{0} file non copiati</value></data>
+  <data name="CleanStayFailedDetail" xml:space="preserve"><value>Errori di copia: puoi importarli di nuovo più tardi</value></data>
+  <data name="CleanStayExcluded" xml:space="preserve"><value>{0} file delle sessioni che hai escluso</value></data>
+  <data name="CleanStayOther" xml:space="preserve"><value>{0} altri file</value></data>
+  <data name="CleanStayOtherDetail" xml:space="preserve"><value>File di sistema della fotocamera, documenti e tutto ciò che non è foto o video</value></data>
+  <data name="CleanSpaceNow" xml:space="preserve"><value>Ora</value></data>
+  <data name="CleanSpaceAfter" xml:space="preserve"><value>Dopo la pulizia</value></data>
+  <data name="CleanCheck" xml:space="preserve"><value>Subito prima di eliminare ogni file, ImportaMI ricontrolla l'hash della copia sul computer. Se non coincide, il file resta sulla scheda.</value></data>
+  <data name="CleanAck" xml:space="preserve"><value>Ho capito: i file eliminati dalla scheda non vanno nel cestino</value></data>
+  <data name="CleanDelete" xml:space="preserve"><value>Elimina {0} file · {1}</value></data>
+  <data name="CleanSkip" xml:space="preserve"><value>Non pulire</value></data>
+  <data name="CleanRunning" xml:space="preserve"><value>Pulizia in corso</value></data>
+  <data name="CleanProgress" xml:space="preserve"><value>{0} di {1} file · {2} liberati</value></data>
+  <data name="CleanDoneTitle" xml:space="preserve"><value>Scheda pulita</value></data>
+  <data name="CleanSkippedTitle" xml:space="preserve"><value>Pulizia saltata</value></data>
+  <data name="CleanSkippedDetail" xml:space="preserve"><value>Nessun file è stato eliminato da {0}.</value></data>
+  <data name="CleanStoppedTitle" xml:space="preserve"><value>Pulizia interrotta</value></data>
+  <data name="CleanStopCanceled" xml:space="preserve"><value>Hai interrotto la pulizia. I file rimanenti sono ancora sulla scheda.</value></data>
+  <data name="CleanStopSource" xml:space="preserve"><value>La scheda è stata scollegata durante la pulizia. I file non ancora controllati sono ancora lì.</value></data>
+  <data name="TileDeleted" xml:space="preserve"><value>ELIMINATI</value></data>
+  <data name="TileDeletedDetail" xml:space="preserve"><value>Ognuno ricontrollato prima sul computer</value></data>
+  <data name="TileFreed" xml:space="preserve"><value>SPAZIO LIBERATO</value></data>
+  <data name="TileKept" xml:space="preserve"><value>TENUTI</value></data>
+  <data name="TileKeptDetail" xml:space="preserve"><value>Vedi i motivi sotto</value></data>
+  <data name="TileKeptNone" xml:space="preserve"><value>Niente da segnalare</value></data>
+  <data name="TileFreeNow" xml:space="preserve"><value>LIBERI ORA</value></data>
+  <data name="KeptProtected" xml:space="preserve"><value>Protetto in fotocamera</value></data>
+  <data name="KeptSourceChanged" xml:space="preserve"><value>Modificato sulla scheda dopo la copia</value></data>
+  <data name="KeptCopyMissing" xml:space="preserve"><value>La copia non è più sul computer</value></data>
+  <data name="KeptCopyDifferent" xml:space="preserve"><value>La copia non corrisponde più all'originale</value></data>
+  <data name="KeptFailed" xml:space="preserve"><value>Non è stato possibile eliminarlo</value></data>
+  <data name="FormatTip" xml:space="preserve"><value>Prima del prossimo servizio formatta la scheda dalla fotocamera: ricrea le cartelle che la fotocamera si aspetta.</value></data>
+
+  <!-- Valori del modello -->
+  <data name="FormatRawAndJpeg" xml:space="preserve"><value>RAW + JPEG</value></data>
+  <data name="FormatRawOnly" xml:space="preserve"><value>Solo RAW</value></data>
+  <data name="FormatJpegOnly" xml:space="preserve"><value>Solo JPEG</value></data>
+  <data name="SubfolderModeNone" xml:space="preserve"><value>Tutto nella cartella della sessione</value></data>
+  <data name="SubfolderModePhotosAndVideos" xml:space="preserve"><value>Foto e video in cartelle separate</value></data>
+  <data name="SubfolderModeByFormat" xml:space="preserve"><value>RAW, JPEG e video in cartelle separate</value></data>
+  <data name="SubfolderPhotos" xml:space="preserve"><value>Foto</value></data>
+  <data name="SubfolderVideos" xml:space="preserve"><value>Video</value></data>
+  <data name="DurationSeconds" xml:space="preserve"><value>{0} s</value></data>
+  <data name="DurationMinutes" xml:space="preserve"><value>{0} min</value></data>
+  <data name="DurationHours" xml:space="preserve"><value>{0} h</value></data>
+  <data name="DurationHoursMinutes" xml:space="preserve"><value>{0} h {1:00} min</value></data>
+</root>

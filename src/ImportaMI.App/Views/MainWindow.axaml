@@ -1,0 +1,73 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ImportaMI.App.ViewModels"
+        x:Class="ImportaMI.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="ImportaMI"
+        Background="{StaticResource AppBackground}"
+        Width="1280" Height="820" MinWidth="960" MinHeight="640">
+
+    <Grid ColumnDefinitions="224,*">
+        <!-- Barra laterale con i cinque passaggi -->
+        <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0" Padding="10,16">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="ImportaMI" FontSize="18" FontWeight="Bold" Margin="10,0,0,18" />
+                <ItemsControl ItemsSource="{Binding Steps}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:StepItem">
+                            <Button Classes="step"
+                                    Classes.active="{Binding IsActive}"
+                                    Classes.done="{Binding IsDone}"
+                                    IsEnabled="{Binding IsAvailable}"
+                                    Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).GoToStepCommand}"
+                                    CommandParameter="{Binding}">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Classes="number" Width="24" Height="24" CornerRadius="12" BorderThickness="1.5">
+                                        <TextBlock Text="{Binding Number}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+
+        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
+    </Grid>
+
+    <Window.Styles>
+        <Style Selector="Button.step">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Margin" Value="0,1" />
+        </Style>
+        <Style Selector="Button.step:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.step:disabled">
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
+        <Style Selector="Button.step Border.number">
+            <Setter Property="BorderBrush" Value="{StaticResource FaintBrush}" />
+        </Style>
+        <Style Selector="Button.step.active">
+            <Setter Property="Background" Value="{StaticResource RaisedBrush}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.step.active Border.number">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="TextElement.Foreground" Value="#1D1406" />
+        </Style>
+        <Style Selector="Button.step.done Border.number">
+            <Setter Property="BorderBrush" Value="{StaticResource OkBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource OkBrush}" />
+        </Style>
+    </Window.Styles>
+</Window>

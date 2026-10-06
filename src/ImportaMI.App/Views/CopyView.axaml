@@ -1,0 +1,147 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ImportaMI.App.ViewModels"
+             xmlns:res="using:ImportaMI.App.Resources"
+             x:Class="ImportaMI.App.Views.CopyView"
+             x:DataType="vm:CopyViewModel">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="24,18,24,14">
+            <StackPanel Spacing="4">
+                <TextBlock Classes="title" Text="{Binding Title}" />
+                <TextBlock Classes="muted" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </Border>
+
+        <!-- Azioni: durante la copia pausa e annulla, poi le azioni del report -->
+        <Border DockPanel.Dock="Bottom" Classes="actionbar">
+            <Panel>
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" IsVisible="{Binding IsRunning}">
+                    <Button Content="{x:Static res:Strings.Cancel}" Command="{Binding CancelCommand}" />
+                    <Button Content="{Binding PauseLabel}" Command="{Binding TogglePauseCommand}" />
+                </StackPanel>
+                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsFinished}">
+                    <TextBlock Classes="muted" FontSize="12" Text="{Binding ReportSavedText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                        <Button Classes="subtle" Content="{x:Static res:Strings.NewImport}" Command="{Binding NewImportCommand}" />
+                        <Button Content="{x:Static res:Strings.OpenReport}" Command="{Binding OpenReportCommand}"
+                                IsVisible="{Binding ReportPath, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <Button Content="{x:Static res:Strings.OpenFolder}" Command="{Binding OpenFolderCommand}" />
+                        <Button Content="{x:Static res:Strings.EjectButton}" Command="{Binding EjectCommand}" IsVisible="{Binding CanEject}" />
+                        <Button Classes="accent" Content="{x:Static res:Strings.GoToCleanup}" Command="{Binding CleanupCommand}" IsVisible="{Binding ProposeCleanup}" />
+                    </StackPanel>
+                </Grid>
+            </Panel>
+        </Border>
+
+        <ScrollViewer Padding="24,20">
+            <StackPanel Spacing="16" MaxWidth="1000" HorizontalAlignment="Left">
+                <!-- Avanzamento -->
+                <StackPanel Spacing="10" IsVisible="{Binding IsRunning}">
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBlock Text="{Binding PercentText}" FontSize="48" FontWeight="Bold" />
+                        <TextBlock Classes="mono muted" Text="{Binding StatsText}" VerticalAlignment="Bottom" Margin="0,0,0,10" />
+                    </StackPanel>
+                    <ProgressBar Value="{Binding Percent}" Maximum="100" Height="10" MinHeight="10" MinWidth="0" />
+                    <TextBlock Classes="mono faint" Text="{Binding CurrentText}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <!-- Report -->
+                <StackPanel Spacing="12" IsVisible="{Binding IsFinished}">
+                    <Border Classes="notice" IsVisible="{Binding HasStopMessage}">
+                        <TextBlock Text="{Binding StopMessage}" TextWrapping="Wrap" />
+                    </Border>
+                    <Border Classes="notice" IsVisible="{Binding HasEjectMessage}" BorderBrush="{StaticResource OkBrush}">
+                        <TextBlock Text="{Binding EjectMessage}" TextWrapping="Wrap" />
+                    </Border>
+                    <WrapPanel>
+                        <Border Classes="tile" Width="236">
+                            <StackPanel>
+                                <TextBlock Classes="label" Text="{x:Static res:Strings.TileCopied}" />
+                                <TextBlock Classes="tilevalue" Foreground="{StaticResource OkBrush}" Text="{Binding CopiedValue}" />
+                                <TextBlock Classes="muted" FontSize="12" Text="{Binding CopiedDetail}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="tile" Width="236">
+                            <StackPanel>
+                                <TextBlock Classes="label" Text="{x:Static res:Strings.TileSkipped}" />
+                                <TextBlock Classes="tilevalue" Text="{Binding SkippedValue}" />
+                                <TextBlock Classes="muted" FontSize="12" Text="{x:Static res:Strings.TileSkippedDetail}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="tile" Width="236">
+                            <StackPanel>
+                                <TextBlock Classes="label" Text="{x:Static res:Strings.TileFailed}" />
+                                <TextBlock Classes="tilevalue" Classes.error="{Binding HasFailures}" Text="{Binding FailedValue}" />
+                                <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{x:Static res:Strings.TileFailedDetail}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="tile" Width="236">
+                            <StackPanel>
+                                <TextBlock Classes="label" Text="{x:Static res:Strings.TileDuration}" />
+                                <TextBlock Classes="tilevalue" Text="{Binding DurationValue}" />
+                                <TextBlock Classes="muted" FontSize="12" Text="{Binding DurationDetail}" />
+                            </StackPanel>
+                        </Border>
+                    </WrapPanel>
+                </StackPanel>
+
+                <!-- Sessioni: avanzamento durante la copia, esito alla fine -->
+                <StackPanel Spacing="2">
+                    <TextBlock Classes="label" Text="{x:Static res:Strings.CopySessions}" Margin="0,0,0,6" />
+                    <ItemsControl ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CopySessionRow">
+                                <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="4,10">
+                                    <Grid ColumnDefinitions="2*,1.4*,90,130" ColumnSpacing="16">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Classes="mono faint" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Folder}" />
+                                        </StackPanel>
+                                        <Panel Grid.Column="1" VerticalAlignment="Center">
+                                            <ProgressBar Value="{Binding Percent}" Maximum="100" Height="5" MinHeight="5" MinWidth="0"
+                                                         IsVisible="{Binding !$parent[UserControl].((vm:CopyViewModel)DataContext).IsFinished}" />
+                                            <TextBlock Classes="mono muted" Text="{Binding ResultText}"
+                                                       IsVisible="{Binding $parent[UserControl].((vm:CopyViewModel)DataContext).IsFinished}" />
+                                        </Panel>
+                                        <TextBlock Grid.Column="2" Classes="mono muted" Text="{Binding SizeText}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        <Border Grid.Column="3" Classes="status" Classes.running="{Binding IsRunning}" Classes.ok="{Binding IsOk}" Classes.error="{Binding IsError}"
+                                                HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Status}" FontSize="11" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- File non copiati, con il motivo -->
+                <Border Classes="notice error" IsVisible="{Binding ShowRetry}">
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{x:Static res:Strings.FailuresHeader}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="{Binding RetryLabel}" Command="{Binding RetryCommand}" />
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding Failures}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FailureItem">
+                                    <Grid ColumnDefinitions="220,*" Margin="0,2">
+                                        <TextBlock Classes="mono" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Reason}" ToolTip.Tip="{Binding Detail}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.tilevalue.error">
+            <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+        </Style>
+    </UserControl.Styles>
+</UserControl>
