@@ -71,7 +71,7 @@ public class ScreensTests
         // Prima importazione, senza pulizia della scheda.
         var source = (SourceViewModel)main.CurrentPage;
         ChooseFolderAndScan(source);
-        WaitUntil(() => main.CurrentPage is SessionsViewModel s && !s.IsCheckingArchive);
+        WaitUntil(() => main.CurrentPage is SessionsViewModel s && !s.IsCheckingArchive && !s.IsAiAnalyzing);
         ((SessionsViewModel)main.CurrentPage).NextCommand.Execute(null);
         var target = (DestinationViewModel)main.CurrentPage;
         target.DestinationPath = destination.Root;
@@ -87,7 +87,7 @@ public class ScreensTests
 
         // Seconda scansione: tutto è già nell'archivio, quindi niente è selezionato.
         source.ScanCommand.Execute(null);
-        WaitUntil(() => main.CurrentPage is SessionsViewModel s && !s.IsCheckingArchive);
+        WaitUntil(() => main.CurrentPage is SessionsViewModel s && !s.IsCheckingArchive && !s.IsAiAnalyzing);
         var sessions = (SessionsViewModel)main.CurrentPage;
         Assert.All(sessions.Sessions, s => Assert.True(s.IsFullyArchived));
         Assert.All(sessions.Sessions, s => Assert.False(s.IsSelected));
@@ -141,8 +141,7 @@ public class ScreensTests
         ChooseFolderAndScan(source);
         WaitUntil(() => main.CurrentPage is SessionsViewModel);
         var sessions = (SessionsViewModel)main.CurrentPage;
-        sessions.Sessions[0].Name = language == "it" ? "Alba al lago di Como" : "Sunrise at Lake Como";
-        WaitUntil(() => sessions.Sessions.SelectMany(s => s.Thumbnails).Where(t => !t.IsVideo).All(t => t.HasImage));
+        WaitUntil(() => !sessions.IsCheckingArchive && !sessions.IsAiAnalyzing && sessions.Sessions.SelectMany(s => s.Thumbnails).Where(t => !t.IsVideo).All(t => t.HasImage));
         Save(window, $"2-sessions-{language}");
 
         // 3 · Destinazione
