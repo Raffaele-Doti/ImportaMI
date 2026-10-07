@@ -235,4 +235,7 @@
   <data name="AiComplete" xml:space="preserve"><value>AI analysis complete · {0} photos</value></data>
   <data name="AiTagsLabel" xml:space="preserve"><value>AI Categories:</value></data>
   <data name="AiNextDisabled" xml:space="preserve"><value>Wait for AI analysis of all photos to complete</value></data>
+  <data name="AiUndeterminedCategory" xml:space="preserve"><value>Category undetermined</value></data>
+  <data name="AiUndeterminedToolTip" xml:space="preserve"><value>AI analysis could not determine a specific category for these photos with sufficient confidence.</value></data>
+  <data name="AiSuggestedNameToolTip" xml:space="preserve"><value>Recommended folder name · Click to apply</value></data>
 </root>

@@ -93,4 +93,39 @@ public class AiViewModelTests
         vm.IsAiAnalyzing = false;
         Assert.True(vm.NextCommand.CanExecute(null));
     }
+
+    [Fact]
+    public void SessionItemViewModel_UpdateAiTags_SetsUndeterminedAlert_WhenNoCategoryFound()
+    {
+        var shot = CreateShot();
+        var session = new ShootingSession([shot]);
+        var mockOwner = new SessionsViewModel(CreateScan(), "test", "dest", () => { }, () => { });
+        var item = new SessionItemViewModel(session, "", true, false, mockOwner);
+
+        item.UpdateAiTags([], "", isUserEdited: false, isUndetermined: true);
+
+        Assert.True(item.IsAiUndetermined);
+        Assert.False(item.HasAiTags);
+        Assert.Empty(item.Name);
+    }
+
+    [Fact]
+    public void SessionItemViewModel_ApplySuggestedNameCommand_AppliesSuggestedName()
+    {
+        var shot = CreateShot();
+        var session = new ShootingSession([shot]);
+        var mockOwner = new SessionsViewModel(CreateScan(), "test", "dest", () => { }, () => { });
+        var item = new SessionItemViewModel(session, "Nome Esistente", true, false, mockOwner);
+
+        var tags = new List<SessionTag> { new(PhotoCategories.Motors, 1, 0.9f) };
+        item.UpdateAiTags(tags, "Motori", isUserEdited: true);
+
+        Assert.Equal("Nome Esistente", item.Name);
+        Assert.True(item.CanApplySuggestedName);
+
+        item.ApplySuggestedNameCommand.Execute(null);
+
+        Assert.Equal("Motori", item.Name);
+        Assert.False(item.CanApplySuggestedName);
+    }
 }

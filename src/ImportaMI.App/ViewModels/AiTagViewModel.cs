@@ -19,12 +19,14 @@ public sealed partial class AiTagViewModel : ObservableObject
         Category = tag.Category;
         ShotCount = tag.ShotCount;
         Confidence = tag.AverageConfidence;
+        SuggestedFolderName = SessionTagger.CategoryToFolderName(tag.Category);
         Label = $"🏷️ {tag.Category}";
         CountText = $"({tag.ShotCount})";
-        ToolTip = $"{tag.ShotCount} foto riconosciute come «{tag.Category}» · Clicca per impostare come nome della cartella";
+        ToolTip = $"{tag.ShotCount} foto riconosciute come «{tag.Category}» · Clicca per impostare «{SuggestedFolderName}» come nome della cartella";
     }
 
     public string Category { get; }
+    public string SuggestedFolderName { get; }
     public int ShotCount { get; }
     public float Confidence { get; }
     public string Label { get; }
@@ -32,5 +34,5 @@ public sealed partial class AiTagViewModel : ObservableObject
     public string ToolTip { get; }
 
     [RelayCommand]
-    private void Apply() => _apply(Category);
+    private void Apply() => _apply(SuggestedFolderName);
 }

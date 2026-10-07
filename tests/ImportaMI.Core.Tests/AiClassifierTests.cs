@@ -277,4 +277,28 @@ public class AiClassifierTests
             }
         }
     }
+
+    [Fact]
+    public void SessionTagger_GeneratesCombinedName_WhenTwoProminentCategories()
+    {
+        var tags = new List<SessionTag>
+        {
+            new(PhotoCategories.Beach, 10, 0.9f),
+            new(PhotoCategories.Sunset, 8, 0.85f),
+        };
+
+        var name = SessionTagger.GenerateSuggestedName(tags);
+
+        Assert.Equal("Mare al tramonto", name);
+    }
+
+    [Fact]
+    public void SessionTagger_SetsUndetermined_WhenNoScores()
+    {
+        var analysis = SessionTagger.Aggregate([[]]);
+
+        Assert.True(analysis.IsUndetermined);
+        Assert.Empty(analysis.Tags);
+        Assert.Empty(analysis.SuggestedName);
+    }
 }

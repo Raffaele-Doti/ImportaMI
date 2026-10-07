@@ -235,4 +235,7 @@
   <data name="AiComplete" xml:space="preserve"><value>Analisi AI completata · {0} foto</value></data>
   <data name="AiTagsLabel" xml:space="preserve"><value>Categorie AI:</value></data>
   <data name="AiNextDisabled" xml:space="preserve"><value>Attendere il completamento dell'analisi AI di tutte le foto</value></data>
+  <data name="AiUndeterminedCategory" xml:space="preserve"><value>Categoria non determinabile</value></data>
+  <data name="AiUndeterminedToolTip" xml:space="preserve"><value>L'analisi AI non ha individuato una categoria specifica per queste foto con sufficiente confidenza.</value></data>
+  <data name="AiSuggestedNameToolTip" xml:space="preserve"><value>Nome consigliato per la cartella · Clicca per applicare</value></data>
 </root>

@@ -70,9 +70,13 @@ public sealed class AiClassifier : IDisposable
                     // Combina con boost euristico (tramonto, notte sono meglio rilevati dall'euristica)
                     return CombineWithHeuristics(onnxScores, bitmap, shot);
                 }
+
+                // Il modello ONNX è attivo: se la scena non corrisponde a nessuna categoria
+                // riconosciuta dal modello, non forzare categorie fittizie da analisi colore generica.
+                return [];
             }
 
-            // 2. Fallback: analisi visiva pura (come prima)
+            // 2. Fallback solo se il modello ONNX non è disponibile (analisi visiva colorimetrica)
             return ClassifyWithVisualAnalysis(bitmap, shot);
         }
         catch

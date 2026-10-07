@@ -80,6 +80,7 @@ public partial class SessionItemViewModel : ObservableObject
     public bool CanMerge { get; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanApplySuggestedName))]
     public partial string Name { get; set; }
 
     [ObservableProperty]
@@ -114,9 +115,27 @@ public partial class SessionItemViewModel : ObservableObject
     public partial bool HasAiTags { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSuggestedName))]
+    [NotifyPropertyChangedFor(nameof(CanApplySuggestedName))]
     public partial string? SuggestedName { get; set; }
 
-    public void UpdateAiTags(IReadOnlyList<SessionTag> tags, string suggestedName, bool isUserEdited)
+    public bool HasSuggestedName => !string.IsNullOrWhiteSpace(SuggestedName);
+
+    public bool CanApplySuggestedName => HasSuggestedName && !string.Equals(Name, SuggestedName, StringComparison.OrdinalIgnoreCase);
+
+    [ObservableProperty]
+    public partial bool IsAiUndetermined { get; set; }
+
+    [RelayCommand]
+    private void ApplySuggestedName()
+    {
+        if (!string.IsNullOrWhiteSpace(SuggestedName))
+        {
+            Name = SuggestedName;
+        }
+    }
+
+    public void UpdateAiTags(IReadOnlyList<SessionTag> tags, string suggestedName, bool isUserEdited, bool isUndetermined = false)
     {
         AiTags.Clear();
         foreach (var tag in tags)
@@ -125,6 +144,7 @@ public partial class SessionItemViewModel : ObservableObject
         }
         HasAiTags = AiTags.Count > 0;
         SuggestedName = suggestedName;
+        IsAiUndetermined = isUndetermined;
 
         if (!isUserEdited && string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(suggestedName))
         {
@@ -132,9 +152,9 @@ public partial class SessionItemViewModel : ObservableObject
         }
     }
 
-    private void SetNameFromTag(string tagCategory)
+    private void SetNameFromTag(string folderName)
     {
-        Name = tagCategory;
+        Name = folderName;
     }
 
     partial void OnNameChanged(string value) => _owner.OnRenamed(this);
@@ -444,19 +464,25 @@ public partial class SessionsViewModel : ViewModelBase
 
     private void ApplyAiAnalysisToItem(SessionItemViewModel item)
     {
-        var shotScores = item.Session.Shots
-            .Where(s => !s.IsVideo && _shotClassifications.TryGetValue(SessionBuilder.KeyOf(s), out _))
+        var sessionPhotos = item.Session.Shots.Where(s => !s.IsVideo).ToList();
+        if (sessionPhotos.Count == 0)
+            return;
+
+        var shotScores = sessionPhotos
+            .Where(s => _shotClassifications.TryGetValue(SessionBuilder.KeyOf(s), out _))
             .Select(s => _shotClassifications[SessionBuilder.KeyOf(s)])
             .ToList();
 
         if (shotScores.Count > 0)
         {
+            var isComplete = shotScores.Count == sessionPhotos.Count;
             var analysis = SessionTagger.Aggregate(shotScores);
-            item.UpdateAiTags(analysis.Tags, analysis.SuggestedName, _touched.Contains(item.Session.Key));
+            var isUndetermined = isComplete && analysis.IsUndetermined;
+            item.UpdateAiTags(analysis.Tags, analysis.SuggestedName, _touched.Contains(item.Session.Key), isUndetermined);
         }
     }
 
-    private sealed record AiProgress(double Percent, string StatusText, string? UpdatedSessionKey, IReadOnlyList<SessionTag>? Tags, string? SuggestedName);
+    private sealed record AiProgress(double Percent, string StatusText, string? UpdatedSessionKey, IReadOnlyList<SessionTag>? Tags, string? SuggestedName, bool IsUndetermined = false);
 
     private async Task StartAiAnalysisAsync(CancellationToken ct)
     {
@@ -479,7 +505,7 @@ public partial class SessionsViewModel : ViewModelBase
                 var item = Sessions.FirstOrDefault(s => s.Session.Key == p.UpdatedSessionKey);
                 if (item is not null)
                 {
-                    item.UpdateAiTags(p.Tags, p.SuggestedName ?? string.Empty, _touched.Contains(p.UpdatedSessionKey));
+                    item.UpdateAiTags(p.Tags, p.SuggestedName ?? string.Empty, _touched.Contains(p.UpdatedSessionKey), p.IsUndetermined);
                     RefreshFolders();
                 }
             }
@@ -518,6 +544,7 @@ public partial class SessionsViewModel : ViewModelBase
                     string? sessionKeyToUpdate = null;
                     IReadOnlyList<SessionTag>? tags = null;
                     string? suggestedName = null;
+                    var isUndetermined = false;
 
                     if (sessionByShotKey.TryGetValue(shotKey, out var session))
                     {
@@ -527,17 +554,26 @@ public partial class SessionsViewModel : ViewModelBase
                             .Select(sh => _shotClassifications[SessionBuilder.KeyOf(sh)])
                             .ToList();
 
+                        var sessionPhotosCount = session.Shots.Count(sh => !sh.IsVideo);
+                        var isComplete = sessionShotScores.Count == sessionPhotosCount;
                         var analysis = SessionTagger.Aggregate(sessionShotScores);
                         tags = analysis.Tags;
                         suggestedName = analysis.SuggestedName;
+                        isUndetermined = isComplete && analysis.IsUndetermined;
                     }
 
-                    ((IProgress<AiProgress>)progress).Report(new AiProgress(percent, text, sessionKeyToUpdate, tags, suggestedName));
+                    ((IProgress<AiProgress>)progress).Report(new AiProgress(percent, text, sessionKeyToUpdate, tags, suggestedName, isUndetermined));
                 }
             }, ct);
 
             AiProgressText = Format.Text(Strings.AiComplete, Format.Number(total));
             AiProgressPercent = 100;
+
+            foreach (var item in Sessions)
+            {
+                ApplyAiAnalysisToItem(item);
+            }
+            RefreshFolders();
         }
         catch (OperationCanceledException)
         {
