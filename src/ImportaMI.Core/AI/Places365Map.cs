@@ -494,7 +494,7 @@ internal static class Places365Map
         [109] = [(PhotoCategories.City, 0.5f)],                                                      // courtyard
         [112] = [(PhotoCategories.City, 0.7f)],                                                      // crosswalk
         [125] = [(PhotoCategories.City, 0.9f)],                                                      // downtown
-        [175] = [(PhotoCategories.City, 0.5f)],                                                      // highway
+        [175] = [(PhotoCategories.City, 0.6f), (PhotoCategories.Motors, 0.4f)],                      // highway
         [192] = [(PhotoCategories.City, 0.6f)],                                                      // industrial_area
         [200] = [(PhotoCategories.City, 0.6f)],                                                      // kasbah
         [214] = [(PhotoCategories.City, 0.5f), (PhotoCategories.Beach, 0.4f)],                       // lighthouse
@@ -592,6 +592,10 @@ internal static class Places365Map
         [29]  = [(PhotoCategories.Motors, 0.8f)],                                                    // auto_showroom
         [82]  = [(PhotoCategories.Motors, 0.6f)],                                                    // car_interior
         [158] = [(PhotoCategories.Motors, 0.5f)],                                                    // gas_station
+        [255] = [(PhotoCategories.Motors, 0.5f), (PhotoCategories.City, 0.3f)],                      // parking_garage_indoor
+        [256] = [(PhotoCategories.Motors, 0.5f), (PhotoCategories.City, 0.4f)],                      // parking_garage_outdoor
+        [257] = [(PhotoCategories.Motors, 0.6f), (PhotoCategories.City, 0.4f)],                      // parking_lot
+        [282] = [(PhotoCategories.Motors, 0.7f)],                                                    // repair_shop
 
         // ===== FOTOGRAFIA NOTTURNA =====
         // (la notte è difficile da mappare da scene — è più un fatto di luminosità e orario)

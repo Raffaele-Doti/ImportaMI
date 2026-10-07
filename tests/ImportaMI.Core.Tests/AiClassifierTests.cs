@@ -14,6 +14,13 @@ public class AiClassifierTests
         new([new MediaFile(path, MediaKind.Jpeg, time, 100, CaptureTimeSource.Metadata)]);
 
     [Fact]
+    public void AiClassifier_LoadsPlaces365OnnxModel_Successfully()
+    {
+        using var classifier = new AiClassifier();
+        Assert.True(classifier.HasOnnxModel);
+    }
+
+    [Fact]
     public void ImageTensorHelper_CreatesValidTensor_FromBitmap()
     {
         using var bitmap = new SKBitmap(100, 100, SKColorType.Rgb888x, SKAlphaType.Opaque);
