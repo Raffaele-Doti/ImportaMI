@@ -8,11 +8,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ImportaMI.App.Localization;
 using ImportaMI.App.Resources;
+using ImportaMI.Core.AI;
 using ImportaMI.Core.Archive;
 using ImportaMI.Core.Import;
 using ImportaMI.Core.Media;
 using ImportaMI.Core.Scanning;
 using ImportaMI.Core.Sessions;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace ImportaMI.App.ViewModels;
 
@@ -92,7 +95,6 @@ public partial class SessionItemViewModel : ObservableObject
 
     public bool HasWarning => Warning is not null;
 
-    /// <summary>Quanto di questa sessione è già nell'archivio, e dove.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasArchiveText))]
     public partial string? ArchiveText { get; set; }
@@ -104,6 +106,36 @@ public partial class SessionItemViewModel : ObservableObject
     public partial bool IsFullyArchived { get; set; }
 
     public bool HasArchiveText => ArchiveText is not null;
+
+    public ObservableCollection<AiTagViewModel> AiTags { get; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAiTags))]
+    public partial bool HasAiTags { get; set; }
+
+    [ObservableProperty]
+    public partial string? SuggestedName { get; set; }
+
+    public void UpdateAiTags(IReadOnlyList<SessionTag> tags, string suggestedName, bool isUserEdited)
+    {
+        AiTags.Clear();
+        foreach (var tag in tags)
+        {
+            AiTags.Add(new AiTagViewModel(tag, SetNameFromTag));
+        }
+        HasAiTags = AiTags.Count > 0;
+        SuggestedName = suggestedName;
+
+        if (!isUserEdited && string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(suggestedName))
+        {
+            Name = suggestedName;
+        }
+    }
+
+    private void SetNameFromTag(string tagCategory)
+    {
+        Name = tagCategory;
+    }
 
     partial void OnNameChanged(string value) => _owner.OnRenamed(this);
 
@@ -240,6 +272,8 @@ public partial class SessionsViewModel : ViewModelBase
     private readonly Dictionary<string, string> _names = [];
     private readonly HashSet<string> _excluded = [];
     private readonly HashSet<string> _touched = [];
+    private readonly ConcurrentDictionary<string, IReadOnlyList<CategoryScore>> _shotClassifications = new(StringComparer.OrdinalIgnoreCase);
+    private readonly CancellationTokenSource _aiCts = new();
     private bool _rebuilding;
 
     public SessionsViewModel(ScanResult scan, string sourceLabel, string archiveRoot, Action back, Action next)
@@ -267,6 +301,7 @@ public partial class SessionsViewModel : ViewModelBase
 
         Rebuild();
         _ = CheckArchiveAsync();
+        _ = StartAiAnalysisAsync(_aiCts.Token);
     }
 
     public string Subtitle { get; }
@@ -299,6 +334,19 @@ public partial class SessionsViewModel : ViewModelBase
     [ObservableProperty]
     public partial string? ArchiveStatus { get; set; }
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(NextCommand))]
+    public partial bool IsAiAnalyzing { get; set; }
+
+    [ObservableProperty]
+    public partial double AiProgressPercent { get; set; }
+
+    [ObservableProperty]
+    public partial string AiProgressText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool HasAiStatus { get; set; }
+
     /// <summary>Editor aperto per dividere una sessione, oppure <c>null</c>.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSplitting), nameof(IsListing))]
@@ -321,13 +369,17 @@ public partial class SessionsViewModel : ViewModelBase
     private void SelectNone() => SetAll(false);
 
     [RelayCommand]
-    private void Back() => _back();
+    private void Back()
+    {
+        _aiCts.Cancel();
+        _back();
+    }
 
-    // Si aspetta il controllo dell'archivio, altrimenti i duplicati non verrebbero riconosciuti.
+    // Si aspetta il controllo dell'archivio e l'analisi AI di tutte le foto prima di proseguire.
     [RelayCommand(CanExecute = nameof(CanContinue))]
     private void Next() => _next();
 
-    private bool CanContinue() => HasSelection && !IsCheckingArchive;
+    private bool CanContinue() => HasSelection && !IsCheckingArchive && !IsAiAnalyzing;
 
     internal void OnRenamed(SessionItemViewModel item)
     {
@@ -381,12 +433,124 @@ public partial class SessionsViewModel : ViewModelBase
             var name = _names.TryGetValue(session.Key, out var chosen) ? chosen : string.Empty;
             var item = new SessionItemViewModel(session, name, !_excluded.Contains(session.Key), canMerge: i > 0, this);
             DescribeArchive(item);
+            ApplyAiAnalysisToItem(item);
             Sessions.Add(item);
         }
         _rebuilding = false;
 
         CountText = Format.Text(Strings.SessionsCount, Format.Number(Sessions.Count));
         RefreshFolders();
+    }
+
+    private void ApplyAiAnalysisToItem(SessionItemViewModel item)
+    {
+        var shotScores = item.Session.Shots
+            .Where(s => !s.IsVideo && _shotClassifications.TryGetValue(SessionBuilder.KeyOf(s), out _))
+            .Select(s => _shotClassifications[SessionBuilder.KeyOf(s)])
+            .ToList();
+
+        if (shotScores.Count > 0)
+        {
+            var analysis = SessionTagger.Aggregate(shotScores);
+            item.UpdateAiTags(analysis.Tags, analysis.SuggestedName, _touched.Contains(item.Session.Key));
+        }
+    }
+
+    private sealed record AiProgress(double Percent, string StatusText, string? UpdatedSessionKey, IReadOnlyList<SessionTag>? Tags, string? SuggestedName);
+
+    private async Task StartAiAnalysisAsync(CancellationToken ct)
+    {
+        var photos = _shots.Where(s => !s.IsVideo).ToList();
+        var total = photos.Count;
+        if (total == 0)
+            return;
+
+        IsAiAnalyzing = true;
+        HasAiStatus = true;
+        AiProgressPercent = 0;
+        AiProgressText = Format.Text(Strings.AiAnalyzing, Format.Number(0), Format.Number(total), 0);
+
+        var progress = new Progress<AiProgress>(p =>
+        {
+            AiProgressPercent = p.Percent;
+            AiProgressText = p.StatusText;
+            if (p.UpdatedSessionKey is not null && p.Tags is not null)
+            {
+                var item = Sessions.FirstOrDefault(s => s.Session.Key == p.UpdatedSessionKey);
+                if (item is not null)
+                {
+                    item.UpdateAiTags(p.Tags, p.SuggestedName ?? string.Empty, _touched.Contains(p.UpdatedSessionKey));
+                    RefreshFolders();
+                }
+            }
+        });
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                var analyzed = 0;
+                var currentSessions = SessionBuilder.Build(_shots, _starts);
+                var sessionByShotKey = new Dictionary<string, ShootingSession>(StringComparer.OrdinalIgnoreCase);
+                foreach (var s in currentSessions)
+                {
+                    foreach (var shot in s.Shots)
+                    {
+                        sessionByShotKey[SessionBuilder.KeyOf(shot)] = s;
+                    }
+                }
+
+                var classifier = AiClassifier.Default;
+
+                foreach (var shot in photos)
+                {
+                    if (ct.IsCancellationRequested)
+                        return;
+
+                    var shotKey = SessionBuilder.KeyOf(shot);
+                    var scores = classifier.ClassifyShot(shot);
+                    _shotClassifications[shotKey] = scores;
+
+                    analyzed++;
+                    var percent = (double)analyzed / total * 100.0;
+                    var text = Format.Text(Strings.AiAnalyzing, Format.Number(analyzed), Format.Number(total), (int)percent);
+
+                    string? sessionKeyToUpdate = null;
+                    IReadOnlyList<SessionTag>? tags = null;
+                    string? suggestedName = null;
+
+                    if (sessionByShotKey.TryGetValue(shotKey, out var session))
+                    {
+                        sessionKeyToUpdate = session.Key;
+                        var sessionShotScores = session.Shots
+                            .Where(sh => !sh.IsVideo && _shotClassifications.TryGetValue(SessionBuilder.KeyOf(sh), out _))
+                            .Select(sh => _shotClassifications[SessionBuilder.KeyOf(sh)])
+                            .ToList();
+
+                        var analysis = SessionTagger.Aggregate(sessionShotScores);
+                        tags = analysis.Tags;
+                        suggestedName = analysis.SuggestedName;
+                    }
+
+                    ((IProgress<AiProgress>)progress).Report(new AiProgress(percent, text, sessionKeyToUpdate, tags, suggestedName));
+                }
+            }, ct);
+
+            AiProgressText = Format.Text(Strings.AiComplete, Format.Number(total));
+            AiProgressPercent = 100;
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception e)
+        {
+            Services.AppLog.Error("Errore durante l'analisi AI", e);
+        }
+        finally
+        {
+            IsAiAnalyzing = false;
+        }
     }
 
     private async Task CheckArchiveAsync()

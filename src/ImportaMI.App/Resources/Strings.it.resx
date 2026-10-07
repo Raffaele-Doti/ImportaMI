@@ -229,4 +229,10 @@
   <data name="DurationMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="DurationHours" xml:space="preserve"><value>{0} h</value></data>
   <data name="DurationHoursMinutes" xml:space="preserve"><value>{0} h {1:00} min</value></data>
+
+  <!-- AI -->
+  <data name="AiAnalyzing" xml:space="preserve"><value>Analisi AI in corso: {0} di {1} foto ({2}%)…</value></data>
+  <data name="AiComplete" xml:space="preserve"><value>Analisi AI completata · {0} foto</value></data>
+  <data name="AiTagsLabel" xml:space="preserve"><value>Categorie AI:</value></data>
+  <data name="AiNextDisabled" xml:space="preserve"><value>Attendere il completamento dell'analisi AI di tutte le foto</value></data>
 </root>

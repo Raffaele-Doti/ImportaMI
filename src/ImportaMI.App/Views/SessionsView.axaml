@@ -32,13 +32,25 @@
                     <TextBlock Classes="title" Text="{x:Static res:Strings.SessionsTitle}" />
                     <TextBlock Classes="muted" Text="{Binding Subtitle}" />
                 </StackPanel>
-                <Border Grid.Column="1" Classes="card" Padding="12,8" VerticalAlignment="Bottom" MaxWidth="460"
-                        IsVisible="{Binding ArchiveStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                        <ProgressBar IsIndeterminate="True" Width="60" MinWidth="0" IsVisible="{Binding IsCheckingArchive}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1" Classes="muted" Text="{Binding ArchiveStatus}" TextWrapping="Wrap" VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
+                <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="6" VerticalAlignment="Bottom" MaxWidth="500">
+                    <Border Classes="card" Padding="12,8"
+                            IsVisible="{Binding ArchiveStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ProgressBar IsIndeterminate="True" Width="60" MinWidth="0" IsVisible="{Binding IsCheckingArchive}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Classes="muted" Text="{Binding ArchiveStatus}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Classes="card" Padding="12,8"
+                            IsVisible="{Binding HasAiStatus}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ProgressBar Width="90" Height="6" Minimum="0" Maximum="100"
+                                         Value="{Binding AiProgressPercent}"
+                                         IsVisible="{Binding IsAiAnalyzing}"
+                                         VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Classes="muted" Text="{Binding AiProgressText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -49,7 +61,8 @@
                     <TextBlock Classes="muted" Text="{Binding Summary}" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
                         <Button Content="{x:Static res:Strings.Back}" Command="{Binding BackCommand}" />
-                        <Button Classes="accent" Content="{x:Static res:Strings.NextDestination}" Command="{Binding NextCommand}" />
+                        <Button Classes="accent" Content="{x:Static res:Strings.NextDestination}" Command="{Binding NextCommand}"
+                                ToolTip.Tip="{x:Static res:Strings.AiNextDisabled}" />
                     </StackPanel>
                 </Grid>
                 <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsSplitting}">
@@ -105,6 +118,30 @@
                                                 <Border Classes="chip" Background="#24E8C450" IsVisible="{Binding HasWarning}">
                                                     <TextBlock Text="{Binding Warning}" FontSize="11" Foreground="{StaticResource WarnBrush}" />
                                                 </Border>
+                                            </WrapPanel>
+                                            <!-- Tag suggeriti dall'AI -->
+                                            <WrapPanel IsVisible="{Binding HasAiTags}" Margin="0,2,0,2">
+                                                <TextBlock Text="{x:Static res:Strings.AiTagsLabel}" Classes="mono faint"
+                                                           VerticalAlignment="Center" Margin="0,0,6,0" FontSize="11" />
+                                                <ItemsControl ItemsSource="{Binding AiTags}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:AiTagViewModel">
+                                                            <Button Classes="tag" Margin="0,0,6,4"
+                                                                    Command="{Binding ApplyCommand}"
+                                                                    ToolTip.Tip="{Binding ToolTip}">
+                                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                    <TextBlock Text="{Binding Label}" />
+                                                                    <TextBlock Text="{Binding CountText}" Classes="muted" />
+                                                                </StackPanel>
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </WrapPanel>
                                             <ItemsControl ItemsSource="{Binding Thumbnails}" ItemTemplate="{StaticResource Thumb}">
                                                 <ItemsControl.ItemsPanel>
