@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -11,6 +11,19 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.30.0" />
     <PackageReference Include="SkiaSharp" Version="4.153.1" />
     <PackageReference Include="System.IO.Hashing" Version="10.0.12" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <!-- Modello Places365 ResNet18 ONNX: copiato nella cartella di output sotto models/ -->
+    <None Include="AI\Models\resnet18_places365.onnx"
+          Condition="Exists('AI\Models\resnet18_places365.onnx')"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="models\resnet18_places365.onnx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ImportaMI.Core.Tests" />
   </ItemGroup>
 
 </Project>

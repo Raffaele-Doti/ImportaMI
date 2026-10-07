@@ -116,4 +116,158 @@ public class AiClassifierTests
         Assert.Equal(0xFF, bytes[0]);
         Assert.Equal(0xD8, bytes[1]);
     }
+
+    // ===== Test per la mappatura Places365 =====
+
+    [Fact]
+    public void MapPlaces365_MapsBeachCorrectly()
+    {
+        // Simula logits con alta probabilità per l'indice 48 (beach)
+        var logits = new float[365];
+        logits[48] = 10.0f; // beach
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.NotEmpty(scores);
+        Assert.Equal(PhotoCategories.Beach, scores[0].Category);
+        Assert.True(scores[0].Confidence >= 0.5f);
+    }
+
+    [Fact]
+    public void MapPlaces365_MapsMountainCorrectly()
+    {
+        var logits = new float[365];
+        logits[232] = 10.0f; // mountain
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.NotEmpty(scores);
+        Assert.Equal(PhotoCategories.Mountain, scores[0].Category);
+    }
+
+    [Fact]
+    public void MapPlaces365_MapsRestaurantToFood()
+    {
+        var logits = new float[365];
+        logits[284] = 10.0f; // restaurant
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.NotEmpty(scores);
+        Assert.Equal(PhotoCategories.Food, scores[0].Category);
+    }
+
+    [Fact]
+    public void MapPlaces365_MapsStadiumToSport()
+    {
+        var logits = new float[365];
+        logits[313] = 10.0f; // stadium_football
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.NotEmpty(scores);
+        Assert.Equal(PhotoCategories.Sport, scores[0].Category);
+    }
+
+    [Fact]
+    public void MapPlaces365_MapsSkyscraperToCity()
+    {
+        var logits = new float[365];
+        logits[307] = 10.0f; // skyscraper
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.NotEmpty(scores);
+        Assert.Equal(PhotoCategories.City, scores[0].Category);
+    }
+
+    [Fact]
+    public void MapPlaces365_MapsStageIndoorToConcert()
+    {
+        var logits = new float[365];
+        logits[315] = 10.0f; // stage_indoor
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.NotEmpty(scores);
+        Assert.Equal(PhotoCategories.Concert, scores[0].Category);
+    }
+
+    [Fact]
+    public void MapPlaces365_MapsSnowfieldToSnow()
+    {
+        var logits = new float[365];
+        logits[309] = 10.0f; // snowfield
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.NotEmpty(scores);
+        Assert.Equal(PhotoCategories.Snow, scores[0].Category);
+    }
+
+    [Fact]
+    public void MapPlaces365_MapsMultipleCategories_WhenAmbiguous()
+    {
+        // Simula un risultato ambiguo: mountain_snowy → Mountain + Snow
+        var logits = new float[365];
+        logits[234] = 10.0f; // mountain_snowy
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.True(scores.Count >= 2);
+        var categories = scores.Select(s => s.Category).ToHashSet();
+        Assert.Contains(PhotoCategories.Mountain, categories);
+        Assert.Contains(PhotoCategories.Snow, categories);
+    }
+
+    [Fact]
+    public void MapPlaces365_ReturnsEmpty_WhenUnmappedClass()
+    {
+        // Indice 43 = basement, non mappato a nessuna categoria
+        var logits = new float[365];
+        logits[43] = 10.0f;
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.Empty(scores);
+    }
+
+    [Fact]
+    public void MapPlaces365_ReturnsAtMost5Results()
+    {
+        // Distribuisci probabilità su molte classi mappate
+        var logits = new float[365];
+        logits[48]  = 5.0f; // beach
+        logits[232] = 5.0f; // mountain
+        logits[284] = 5.0f; // restaurant
+        logits[307] = 5.0f; // skyscraper
+        logits[309] = 5.0f; // snowfield
+        logits[315] = 5.0f; // stage_indoor
+        logits[313] = 5.0f; // stadium
+
+        var scores = AiClassifier.MapPlaces365ToCategories(logits);
+
+        Assert.True(scores.Count <= 5);
+    }
+
+    [Fact]
+    public void Places365Map_HasCorrectLabelCount()
+    {
+        Assert.Equal(365, Places365Map.Labels.Length);
+    }
+
+    [Fact]
+    public void Places365Map_AllMappingIndicesAreValid()
+    {
+        foreach (var (index, mappings) in Places365Map.Mapping)
+        {
+            Assert.InRange(index, 0, 364);
+            Assert.NotEmpty(mappings);
+            foreach (var (category, weight) in mappings)
+            {
+                Assert.Contains(category, PhotoCategories.All);
+                Assert.InRange(weight, 0.01f, 1.0f);
+            }
+        }
+    }
 }

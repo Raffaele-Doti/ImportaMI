@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using ImportaMI.Core.Media;
 using Microsoft.ML.OnnxRuntime;
 using SkiaSharp;
@@ -9,9 +10,11 @@ using SkiaSharp;
 namespace ImportaMI.Core.AI;
 
 /// <summary>
-/// Classificatore AI locale per immagini.
-/// Se è presente un modello ONNX (in AppData o nella cartella dell'app), esegue l'inferenza tramite ONNX Runtime.
-/// Altrimenti o in sinergia, applica l'analisi visiva avanzata (colorimetria, dominanti, toni pelle, contrasto, orario ed EXIF).
+/// Classificatore AI locale per immagini basato su Places365 (ResNet18).
+/// Usa un modello ONNX di riconoscimento scene addestrato su 365 categorie,
+/// mappate alle PhotoCategory di ImportaMI.
+/// L'euristica visiva (colorimetria, orario EXIF) viene combinata come boost ai risultati del modello
+/// oppure usata come fallback se il modello non è disponibile.
 /// </summary>
 public sealed class AiClassifier : IDisposable
 {
@@ -58,17 +61,18 @@ public sealed class AiClassifier : IDisposable
             if (bitmap is null)
                 return [];
 
-            // 1. Prova con modello ONNX se caricato
+            // 1. Prova con modello Places365 ONNX
             if (_onnxSession is not null)
             {
-                var onnxResult = ClassifyWithOnnx(bitmap);
-                if (onnxResult.Count > 0)
+                var onnxScores = ClassifyWithPlaces365(bitmap);
+                if (onnxScores.Count > 0)
                 {
-                    return onnxResult;
+                    // Combina con boost euristico (tramonto, notte sono meglio rilevati dall'euristica)
+                    return CombineWithHeuristics(onnxScores, bitmap, shot);
                 }
             }
 
-            // 2. Analisi visiva ad alte prestazioni (colorimetria + EXIF)
+            // 2. Fallback: analisi visiva pura (come prima)
             return ClassifyWithVisualAnalysis(bitmap, shot);
         }
         catch
@@ -77,7 +81,10 @@ public sealed class AiClassifier : IDisposable
         }
     }
 
-    private IReadOnlyList<CategoryScore> ClassifyWithOnnx(SKBitmap bitmap)
+    /// <summary>
+    /// Esegue l'inferenza Places365 e mappa i risultati alle PhotoCategory.
+    /// </summary>
+    private IReadOnlyList<CategoryScore> ClassifyWithPlaces365(SKBitmap bitmap)
     {
         if (_onnxSession is null)
             return [];
@@ -91,40 +98,164 @@ public sealed class AiClassifier : IDisposable
                 NamedOnnxValue.CreateFromTensor(inputName, tensor)
             };
 
+            float[]? logits;
             lock (_lock)
             {
                 using var results = _onnxSession.Run(inputs);
-                var output = results.FirstOrDefault()?.AsEnumerable<float>()?.ToArray();
-                if (output is not null && output.Length > 0)
-                {
-                    return MapOnnxOutputToCategories(output);
-                }
+                logits = results.FirstOrDefault()?.AsEnumerable<float>()?.ToArray();
             }
+
+            if (logits is null || logits.Length == 0)
+                return [];
+
+            return MapPlaces365ToCategories(logits);
         }
         catch
         {
-            // Se l'inferenza ONNX fallisce, si userà l'analisi visiva
+            return [];
         }
-
-        return [];
     }
 
-    private static IReadOnlyList<CategoryScore> MapOnnxOutputToCategories(float[] logits)
+    /// <summary>
+    /// Converte i 365 logits del modello in punteggi per le 16 PhotoCategory.
+    /// Applica softmax ai logits, poi aggrega le probabilità usando la mappa Places365.
+    /// </summary>
+    internal static IReadOnlyList<CategoryScore> MapPlaces365ToCategories(float[] logits)
     {
-        // Se il modello ha un numero di classi corrispondente o mappa a categorie standard
-        var scores = new List<CategoryScore>();
+        // Softmax
         var max = logits.Max();
-        var expSum = logits.Select(l => MathF.Exp(l - max)).Sum();
-
-        for (var i = 0; i < Math.Min(PhotoCategories.All.Count, logits.Length); i++)
+        var exps = new float[logits.Length];
+        var expSum = 0f;
+        for (var i = 0; i < logits.Length; i++)
         {
-            var prob = MathF.Exp(logits[i] - max) / expSum;
-            scores.Add(new CategoryScore(PhotoCategories.All[i], prob));
+            exps[i] = MathF.Exp(logits[i] - max);
+            expSum += exps[i];
         }
 
-        return scores.OrderByDescending(s => s.Confidence).ToList();
+        // Aggrega le probabilità per PhotoCategory usando la mappa Places365
+        var categoryScores = new Dictionary<string, float>();
+        var numClasses = Math.Min(logits.Length, Places365Map.Labels.Length);
+
+        for (var i = 0; i < numClasses; i++)
+        {
+            var prob = exps[i] / expSum;
+            if (prob < 0.005f) // Ignora classi con probabilità < 0.5%
+                continue;
+
+            if (!Places365Map.Mapping.TryGetValue(i, out var mappings))
+                continue;
+
+            foreach (var (category, weight) in mappings)
+            {
+                var contribution = prob * weight;
+                if (!categoryScores.TryGetValue(category, out var current))
+                    current = 0f;
+                categoryScores[category] = current + contribution;
+            }
+        }
+
+        if (categoryScores.Count == 0)
+            return [];
+
+        // Normalizza i punteggi per avere il massimo ≈ 0.95
+        var maxScore = categoryScores.Values.Max();
+        var scaleFactor = maxScore > 0 ? Math.Min(0.95f / maxScore, 3.0f) : 1f;
+
+        return categoryScores
+            .Where(kv => kv.Value * scaleFactor >= 0.10f) // Soglia minima 10%
+            .Select(kv => new CategoryScore(kv.Key, Math.Clamp(kv.Value * scaleFactor, 0.1f, 0.95f)))
+            .OrderByDescending(s => s.Confidence)
+            .Take(5)
+            .ToList();
     }
 
+    /// <summary>
+    /// Combina i risultati del modello Places365 con segnali euristici
+    /// (colore, orario) per migliorare categorie che il modello non cattura bene.
+    /// </summary>
+    private static IReadOnlyList<CategoryScore> CombineWithHeuristics(
+        IReadOnlyList<CategoryScore> modelScores,
+        SKBitmap bitmap,
+        Shot shot)
+    {
+        var combined = modelScores.ToDictionary(s => s.Category, s => s.Confidence);
+
+        // Campionamento rapido 32x32 per le euristiche
+        using var small = bitmap.Width == 32 && bitmap.Height == 32
+            ? bitmap
+            : bitmap.Resize(new SKImageInfo(32, 32, SKColorType.Rgb888x), SKSamplingOptions.Default);
+
+        if (small is null)
+            return modelScores;
+
+        var pixels = small.Pixels;
+        var total = pixels.Length;
+        if (total == 0)
+            return modelScores;
+
+        float warmCount = 0, darkCount = 0, skinCount = 0;
+
+        foreach (var p in pixels)
+        {
+            var r = p.Red;
+            var g = p.Green;
+            var b = p.Blue;
+            var brightness = (r + g + b) / 3.0f;
+
+            if (brightness < 35) darkCount++;
+
+            // Toni caldi tramonto
+            if (r > 130 && g > 60 && g < r * 0.85f && b < g * 0.65f)
+                warmCount++;
+
+            // Toni pelle
+            if (r > 95 && g > 40 && b > 20 && r > g && g > b && (r - g) > 15)
+                skinCount++;
+        }
+
+        var warmRatio = warmCount / total;
+        var darkRatio = darkCount / total;
+        var skinRatio = skinCount / total;
+        var hour = shot.CaptureTime.Hour;
+        var isNightTime = hour >= 21 || hour < 6;
+        var isGoldenHour = (hour is >= 6 and <= 8) || (hour is >= 18 and <= 20);
+
+        // Boost Tramonto: il modello Places365 non ha una classe "sunset" diretta
+        if (warmRatio > 0.15f && isGoldenHour)
+        {
+            var sunsetBoost = Math.Clamp(warmRatio * 2.0f + 0.3f, 0.3f, 0.90f);
+            combined[PhotoCategories.Sunset] = Math.Max(
+                combined.GetValueOrDefault(PhotoCategories.Sunset, 0f),
+                sunsetBoost);
+        }
+
+        // Boost Notturna: conferma con EXIF + dominante scura
+        if (darkRatio > 0.50f && isNightTime)
+        {
+            var nightBoost = Math.Clamp(darkRatio * 0.8f + 0.15f, 0.3f, 0.85f);
+            combined[PhotoCategories.Night] = Math.Max(
+                combined.GetValueOrDefault(PhotoCategories.Night, 0f),
+                nightBoost);
+        }
+
+        // Boost Ritratto: toni pelle significativi
+        if (skinRatio > 0.15f && !combined.ContainsKey(PhotoCategories.Portrait))
+        {
+            combined[PhotoCategories.Portrait] = Math.Clamp(skinRatio * 1.8f, 0.2f, 0.7f);
+        }
+
+        return combined
+            .Where(kv => kv.Value >= 0.10f)
+            .Select(kv => new CategoryScore(kv.Key, Math.Clamp(kv.Value, 0.1f, 0.95f)))
+            .OrderByDescending(s => s.Confidence)
+            .Take(5)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Classificazione euristica pura (fallback senza modello ONNX).
+    /// Usa analisi colorimetrica + metadati EXIF.
+    /// </summary>
     public static IReadOnlyList<CategoryScore> ClassifyWithVisualAnalysis(SKBitmap bitmap, Shot shot)
     {
         // Campionamento rapido di 64x64 pixel per velocità istantanea (<2ms)
@@ -273,15 +404,26 @@ public sealed class AiClassifier : IDisposable
 
     private static string? ResolveModelPath()
     {
+        // 1. Cartella personalizzata utente in AppData
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var custom = Path.Combine(appData, "ImportaMI", "models", "classifier.onnx");
+        var custom = Path.Combine(appData, "ImportaMI", "models", "resnet18_places365.onnx");
         if (File.Exists(custom))
             return custom;
 
+        // 2. Modello embedded accanto all'eseguibile
         var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        var inApp = Path.Combine(baseDir, "models", "classifier.onnx");
+        var inApp = Path.Combine(baseDir, "models", "resnet18_places365.onnx");
         if (File.Exists(inApp))
             return inApp;
+
+        // 3. Compatibilità con il vecchio nome generico
+        var legacy = Path.Combine(appData, "ImportaMI", "models", "classifier.onnx");
+        if (File.Exists(legacy))
+            return legacy;
+
+        var legacyApp = Path.Combine(baseDir, "models", "classifier.onnx");
+        if (File.Exists(legacyApp))
+            return legacyApp;
 
         return null;
     }
